@@ -1,0 +1,5 @@
+Flask==3.0.3
+flask_cors==4.0.1
+make_response==1
+pymssql==2.3.0
+pyodbc==5.1.0
