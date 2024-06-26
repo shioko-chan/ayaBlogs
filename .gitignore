@@ -16,3 +16,5 @@ venv/
 node_modules/
 
 storage/
+
+out.css
