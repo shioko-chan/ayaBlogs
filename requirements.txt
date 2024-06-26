@@ -1,5 +1,7 @@
+DBUtils==3.1.0
 Flask==3.0.3
-flask_cors==4.0.1
+Flask_Cors==4.0.1
+Flask_Login==0.6.3
 make_response==1
 pymssql==2.3.0
 pyodbc==5.1.0

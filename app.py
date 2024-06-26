@@ -1,171 +1,158 @@
 from flask import Flask, jsonify, render_template, request, session, redirect, url_for
+from flask_login import (
+    LoginManager,
+    login_user,
+    login_required,
+    logout_user,
+    current_user,
+)
 import pyodbc
 import pymssql
 from flask_cors import CORS
 import make_response
+import tomllib
+import random
+from dbutils.pooled_db import PooledDB
+from pathlib import Path
 
 app = Flask(__name__)
-app.secret_key = "123456"
 
-# 数据库配置
-DB_SERVER = "localhost"
-DB_USER = "sa"
-DB_PASSWORD = "password"
-DB_NAME = "Blog"
+login_manager = LoginManager(app)
 
-# 模拟的文章数据
-users = {
-    "1258": {
-        "password": "123456",
-        "username": "somi",
-        "user_info": "I am somi,a student.",
-    },
-    "user2": {"password": "password2"},
-}
-articles = {
-    1: {
-        "id": 1,
-        "title": "第一篇文章",
-        "timestamp": "2024-06-22 12:00",
-        "content": "这是第一篇文章的内容 \n adasdadssada\n",
-        "likes": 10,
-    },
-}
+config = tomllib.load(open("config.toml", "rb"))
 
-# 模拟的评论数据
-comments = {1: [{"author": "Bob", "content": "这是一条评论"}]}
+DB_SERVER = config["database"]["server"]
+DB_USER = config["database"]["user"]
+DB_PASSWORD = config["database"]["password"]
+DB_NAME = config["database"]["name"]
+
+pool = PooledDB(
+    creator=pymssql,
+    mincached=2,
+    maxcached=10,
+    host=DB_SERVER,
+    user=DB_USER,
+    password=DB_PASSWORD,
+    database=DB_NAME,
+    charset="utf8",
+)
+backgrounds = [file for file in Path("static/bkg").iterdir() if file.is_file()]
 
 
-def get_db_connection():
-    return pymssql.connect(
-        server=DB_SERVER, user=DB_USER, password=DB_PASSWORD, database=DB_NAME
+def query_database(query, params=None) -> list:
+    connection = pool.connection()
+    cursor = connection.cursor()
+    try:
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        rows = cursor.fetchall()
+        return rows
+    finally:
+        cursor.close()
+        connection.close()
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    usr = query_database("select * from usr where uid=%d", (user_id,))
+    assert len(usr) == 1, "wrong response, uid must be unique"
+    usr = usr[0]
+    return usr
+
+
+def get_articles(condition=None, params=None) -> list:
+    query = "select pid,content,title,author,createAt from passage {}"
+    list = query_database(
+        query.format(condition) if condition else query.format(""), params=params
     )
+    return [
+        {
+            "title": title,
+            "content": content,
+            "images": query_database(
+                "select imgpath from images where containBy=%d", (pid,)
+            ),
+            "timestamp": createAt,
+            "author": author,
+        }
+        for pid, content, title, author, createAt in list
+    ]
 
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template(
+        "index.html",
+        user=current_user,
+        articles=get_articles(),
+    )
 
 
-@app.route("/register")
-def register_page():
-    return render_template("register.html")
+@app.route("/mainpage/<username>")
+def mainpage(username):
+    uid = query_database("select uid from usr where uname=%s", (username,))[0][0]
+    return render_template(
+        "index.html",
+        user=current_user,
+        articles=get_articles(
+            condition="where author=%d",
+            params=(uid,),
+        ),
+    )
 
 
-@app.route("/mainpage")
-def mainpage():
-    user_id = session.get("user_id")
-    username = session.get("username")
-    if user_id and username:
-        return render_template("mainpage.html", user_id=user_id, username=username)
-    else:
-        return redirect(url_for("index"))
-
-
-@app.route("/login", methods=["POST"])
-def login():
-    data = request.get_json()
-    user_id = data.get("userID")
-    password = data.get("password")
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    # query = f'SELECT password FROM BUser WHERE userID = {0}'.format(user_id)
-    # query = f'SELECT password FROM BUser WHERE userID = 80001234'
-    # cursor.execute(query)
-    query = "SELECT password FROM BUser WHERE userID = %s"
-    cursor.execute(query, (user_id,))
-    row = cursor.fetchone()
-    if row:
-        db_password = row[0]
-        if db_password == password:
-            # 登录成功
-            session["username"] = "simon"
-            session["user_id"] = user_id
-            return jsonify({"success": True})
-
-            # return redirect(url_for('mainpage'))
-
-        else:
-            # 登录失败
-            # error_msg = "用户名或密码错误，请重新输入。"
-            # return render_template('index.html', error=error_msg)
-            return jsonify({"success": False})
-    else:
-        # 没有找到用户，提示用户不存在或输入错误
-        return jsonify({"success": False})
-
-
-@app.route("/register", methods=["POST"])
-def register_user():
-    try:
-        data = request.get_json()
-        user_id = data["userID"]
-        username = data["username"]
-        password = data["password"]
-        email = data["email"]
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        # Insert new user
-        query = "INSERT INTO BUser (userID, username, password, email) VALUES ('{0}', '{1}', '{2}', '{3}')".format(
-            user_id, username, password, email
+@app.route("/search", methods=["POST"])
+def search():
+    if request.form:
+        keyword = request.form["search"]
+        return render_template(
+            "index.html",
+            user=current_user,
+            search_user=[
+                {
+                    "uname": uname,
+                    "uemail": uemail,
+                    "ubirthday": ubirthday,
+                    "usex": usex,
+                    "uintro": uintro,
+                }
+                for uname, uemail, ubirthday, usex, uintro in query_database(
+                    "select uname,uemail,ubirthday,usex,uintro from usr where uname like %s or uemail like %s",
+                    ("%" + keyword + "%",) * 2,
+                )
+            ],
+            articles=get_articles(
+                "where title like %s or content like %s",
+                ("%" + keyword + "%",) * 2,
+            ),
         )
-        # cursor.execute("INSERT INTO BUser (userID, username, password, email) VALUES (%s, %s, %s, %s)",
-        #               (user_id, username, password, email))
-        cursor.execute(query)
-        conn.commit()
-
-        cursor.close()
-        conn.close()
-
-        return jsonify({"message": "User registered successfully!", "userID": user_id})
-
-    except pyodbc.IntegrityError as e:
-        return make_response(jsonify({"error": "UserID already exists"}), 400)
-    except Exception as e:
-        return make_response(jsonify({"error": str(e)}), 500)
+    else:
+        keyword = request.json["query"]
+        usrs = query_database(
+            "select uname from usr where uname like %s union select uemail from usr where uemail like %s",
+            ("%" + keyword + "%",) * 2,
+        )
+        articles = query_database(
+            "select title from passage where title like %s union select content from passage where content like %s",
+            ("%" + keyword + "%",) * 2,
+        )
+        return jsonify({"usrs": usrs, "articles": articles})
 
 
-@app.route("/user_details")
-def user_details_page():
-    user_id = session.get("user_id")
-    # if user_id:
-    user = users.get(user_id)
-    return render_template(
-        "user_details.html",
-        user_id=user_id,
-        username=user["username"],
-        password=user["password"],
-        user_info=user["user_info"],
-    )
-    # else:
-    #   return redirect(url_for('index'))
-
-
-@app.route("/article_details")
-def article_details():
-    article = articles.get(1)
-    article_comments = comments.get(1, [])
-    return render_template(
-        "article_details.html", article=article, comments=article_comments
-    )
-
-
-@app.route("/writeBlog")
-def writeBlog():
-    return render_template("writeBlog.html")
-
-
-@app.route("/management")
-def management():
-    return render_template("management.html")
-
-
-@app.route("/editArticle")
-def editArticle():
-    article = articles.get(1)
-    return render_template("editArticle.html", article=article)
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        pass
+    else:
+        return render_template(
+            "login.html",
+            user=current_user,
+            random_background=url_for(
+                "static", filename="bkg/" + random.choice(backgrounds).name
+            ),
+        )
 
 
 if __name__ == "__main__":
