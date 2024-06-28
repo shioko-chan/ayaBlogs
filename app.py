@@ -6,7 +6,7 @@ from flask_login import (
     logout_user,
     current_user,
 )
-import pyodbc
+from flask_mail import Message, Mail
 import pymssql
 from flask_cors import CORS
 import make_response
@@ -14,10 +14,18 @@ import tomllib
 import random
 from dbutils.pooled_db import PooledDB
 from pathlib import Path
+from passlib import pwd
+from flask_session import Session
+
 
 app = Flask(__name__)
+app.secret_key = pwd.genword(charset="ascii_72")
+
+app.config["SESSION_TYPE"] = "filesystem"
 
 login_manager = LoginManager(app)
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
 config = tomllib.load(open("config.toml", "rb"))
 
@@ -25,6 +33,21 @@ DB_SERVER = config["database"]["server"]
 DB_USER = config["database"]["user"]
 DB_PASSWORD = config["database"]["password"]
 DB_NAME = config["database"]["name"]
+
+MAIL_SERVER = config["mail"]["server"]
+MAIL_USER = config["mail"]["user"]
+MAIL_PASSWORD = config["mail"]["password"]
+
+app.config.update(
+    MAIL_SERVER=MAIL_SERVER,
+    MAIL_PASSWORD=MAIL_PASSWORD,
+    MAIL_USERNAME=MAIL_USER,
+    MAIL_USE_SSL=True,
+    MAIL_USE_TLS=False,
+    MAIL_PORT=465,
+)
+
+mail = Mail(app)
 
 pool = PooledDB(
     creator=pymssql,
@@ -81,6 +104,22 @@ def get_articles(condition=None, params=None) -> list:
     ]
 
 
+@login_required
+@app.route("/register/validate")
+def validate_mail():
+    if request.json and "email" in request.json.keys():
+        email = request.json["email"]
+        validateCode = random.randint(100000, 999999)
+        message = message = Message(
+            subject="ayaBlogs 验证码",
+            sender=MAIL_USER,
+            recipients=[email],
+            body=f"[ayaBlogs] 你好，欢迎注册ayaBlogs，你的验证码是 {validateCode}",
+        )
+        mail.send(message)
+        return jsonify({"id": 123})
+
+
 @app.route("/")
 def index():
     return render_template(
@@ -129,16 +168,19 @@ def search():
             ),
         )
     else:
-        keyword = request.json["query"]
-        usrs = query_database(
-            "select uname from usr where uname like %s union select uemail from usr where uemail like %s",
-            ("%" + keyword + "%",) * 2,
-        )
-        articles = query_database(
-            "select title from passage where title like %s union select content from passage where content like %s",
-            ("%" + keyword + "%",) * 2,
-        )
-        return jsonify({"usrs": usrs, "articles": articles})
+        if request.json and "query" in request.json.keys():
+            keyword = request.json["query"]
+            usrs = query_database(
+                "select uname from usr where uname like %s union select uemail from usr where uemail like %s",
+                ("%" + keyword + "%",) * 2,
+            )
+            articles = query_database(
+                "select title from passage where title like %s union select content from passage where content like %s",
+                ("%" + keyword + "%",) * 2,
+            )
+            return jsonify({"usrs": usrs, "articles": articles})
+        else:
+            return "request unknown", 400
 
 
 def random_image():
