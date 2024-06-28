@@ -9,28 +9,59 @@
 
   <body class="bg-gray-100 flex flex-col items-stretch justify-between h-screen = bg-cover bg-no-repeat flex-grow" style="background-image: url({{ random_background }});">
     <script src="//recaptcha.net/recaptcha/api.js" async defer></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/login.js') }}"></script>
+    {% if is_login %}
+      <script type="text/javascript" src="{{ url_for('static', filename='js/login.js') }}"></script>
+    {% else %}
+      <script type="text/javascript" src="{{ url_for('static', filename='js/register.js') }}"></script>
+    {% endif %}
     <main class="flex flex-col flex-grow justify-center items-center">
       <div class="bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-6">登录</h2>
-        <form action="/login" method="POST">
-          <div class="mb-4">
-            <label for="username" class="block text-sm font-medium text-gray-700"><span class="font-semibold">用户名 / 注册邮箱</span></label>
-            <input type="text" id="username" name="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required />
-          </div>
-          <div class="mb-6">
-            <label for="password" class="block text-sm font-medium text-gray-700"><span class="font-semibold">密码</span></label>
-            <input type="password" id="password" name="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required />
-          </div>
-          <div class="mb-4">
-            尚未注册？<a class="text-blue-500 underline font-bold hover:text-blue-700 hover:cursor-pointer" href="#">立即注册</a>
-          </div>
-          <form action="?" method="POST">
-            <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
-            <br />
+        {% if is_login %}
+          <h2 class="text-2xl font-semibold text-gray-800 mb-6">登录</h2>
+          <form action="/login" method="POST">
+            <div class="mb-4">
+              <label for="username" class="block text-sm font-medium text-gray-700"><span class="font-semibold">用户名 / 注册邮箱</span></label>
+              <input type="text" name="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required />
+            </div>
+            <div class="mb-6">
+              <label for="password" class="block text-sm font-medium text-gray-700"><span class="font-semibold">密码</span></label>
+              <input type="password" name="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required />
+            </div>
+            <div class="mb-4">
+              尚未注册？<a class="text-blue-500 underline font-bold hover:text-blue-700 hover:cursor-pointer" href="{{ url_for('register') }}">立即注册</a>
+            </div>
+            <form action="?" method="POST">
+              <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+              <br />
+            </form>
+            <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200">登录</button>
           </form>
-          <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200">登录</button>
-        </form>
+        {% else %}
+          <h2 class="text-2xl font-semibold text-gray-800 mb-6">注册</h2>
+          <form action="/register" method="POST">
+            <div class="mb-4">
+              <label for="username" class="block text-sm font-medium text-gray-700"><span class="font-semibold">用户名</span></label>
+              <input type="text" name="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required />
+            </div>
+            <div class="mb-4">
+              <label for="username" class="block text-sm font-medium text-gray-700"><span class="font-semibold">邮箱</span></label>
+              <input type="text" name="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required />
+            </div>
+            <div class="mb-4">
+              <label for="username" class="block text-sm font-medium text-gray-700"><span class="font-semibold">密码</span></label>
+              <input type="text" name="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required />
+            </div>
+            <div class="mb-6">
+              <label for="password" class="block text-sm font-medium text-gray-700"><span class="font-semibold">重复密码</span></label>
+              <input type="password" name="repassword" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required />
+            </div>
+            <form action="?" method="POST">
+              <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"></div>
+              <br />
+            </form>
+            <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-200">登录</button>
+          </form>
+        {% endif %}
       </div>
     </main>
     <footer class="bg-transparent text-white py-5">

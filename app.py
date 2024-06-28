@@ -141,6 +141,10 @@ def search():
         return jsonify({"usrs": usrs, "articles": articles})
 
 
+def random_image():
+    return url_for("static", filename="bkg/" + random.choice(backgrounds).name)
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -149,9 +153,21 @@ def login():
         return render_template(
             "login.html",
             user=current_user,
-            random_background=url_for(
-                "static", filename="bkg/" + random.choice(backgrounds).name
-            ),
+            random_background=random_image(),
+            is_login=True,
+        )
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        pass
+    else:
+        return render_template(
+            "login.html",
+            usr=current_user,
+            random_background=random_image(),
+            is_login=False,
         )
 
 
