@@ -33,7 +33,7 @@ create table passage
 create table images
 (
 	imgid bigint primary key identity(0,1),
-	imgpath varchar(100),
+	imgpath nvarchar(100),
 	containBy bigint foreign key references passage(pid) null,
 	describe nvarchar(200),
 )
@@ -82,4 +82,19 @@ begin
 	delete from images
 	where images.containBy in (select pid
 	from deleted)
+end
+go
+create proc InsertArticle
+	@title nvarchar(max),
+	@content nvarchar(max),
+	@author bigint,
+	@pid bigint out
+as
+begin
+	set nocount on;
+	insert into passage
+		(title, content, author)
+	values
+		(@title, @content, @author);
+	set @pid = scope_identity();
 end

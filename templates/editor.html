@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AyaBlogs - 自由的博客平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  </head>
+  <body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white shadow-lg border-b-2">
+      <div class="px-4 py-6 flex justify-between items-center w-full">
+        <a href="#" class="text-xl font-semibold text-gray-800 ml-10">AYABlogs</a>
+        <div class="flex justify-between items-center mr-10">
+          <nav class="mr-6">
+            <ul class="flex space-x-4">
+              {% if is_authenticated %}
+                {% if user.uname == mainpage_user %}
+                  <li>
+                    <a href="{{ url_for('mainpage', username=user.uname) }}" class="text-gray-600 hover:text-gray-800">管理后台</a>
+                  </li>
+                {% else %}
+                  <li>
+                    <a href="{{ url_for('mainpage', username=user.uname) }}" class="text-gray-600 hover:text-gray-800">前往个人主页</a>
+                  </li>
+                {% endif %}
+              {% else %}
+                <li>
+                  <a href="{{ url_for('login') }}" class="text-gray-600 hover:text-gray-800">登录</a>
+                </li>
+              {% endif %}
+              <li>
+                <a href="{{ url_for('logout') }}" class="text-gray-600 hover:text-gray-800">退出登录</a>
+              </li>
+            </ul>
+          </nav>
+          <div class="relative flex justify-between items-center">
+            {% if is_user_page %}
+              <form action="{{ url_for('search', username=mainpage_user) }}" method="post">
+                <input id="search-input" type="text" name="search" placeholder="搜索当前用户内容" class="px-3 py-2 w-64 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <button type="submit" class="ml-4"><image src="{{ url_for('static', filename='icon/search.png') }}" class="aspect-square w-5 self-center"></image></button>
+              </form>
+            {% else %}
+              <form action="{{ url_for('search') }}" method="post">
+                <input id="search-input" type="text" name="search" placeholder="全站查询，搜索博文、用户" class="px-3 py-2 w-64 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <button type="submit" class="ml-4"><image src="{{ url_for('static', filename='icon/search.png') }}" class="aspect-square w-5 self-center"></image></button>
+              </form>
+            {% endif %}
+            <div id="search-results" class="absolute z-10 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg top-full hidden"></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1">
+      <div class="container mx-auto px-4 py-8">
+        <form id="blogForm" enctype="multipart/form-data" method="POST" action="{{ url_for('publish') }}">
+          <div class="mb-4">
+            <label for="title" class="block text-sm font-semibold text-gray-600 mb-2">标题</label>
+            <input type="text" id="title" name="title" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" placeholder="请输入标题" required />
+          </div>
+          <div class="mb-4">
+            <label for="content" class="block text-sm font-semibold text-gray-600 mb-2">内容</label>
+            <textarea id="content" name="content" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" rows="8" placeholder="请输入内容" required></textarea>
+          </div>
+          <div class="mb-4">
+            <label for="images" class="block text-sm font-semibold text-gray-600 mb-2">上传图片</label>
+            <input type="file" id="images" name="images" class="hidden" multiple />
+            <div id="imagePreview" class="grid grid-cols-2 gap-4"></div>
+            <label for="images" class="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg inline-block mt-2">选择图片</label>
+          </div>
+          <div class="flex justify-end">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-lg">发布</button>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-5">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <h5 class="text-lg font-semibold">AYABlogs</h5>
+          <p class="text-sm">Copyleft 2024 AYA Blogs. No rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      const imagesInput = document.getElementById('images')
+      const imagePreview = document.getElementById('imagePreview')
+      const blogForm = document.getElementById('blogForm')
+      
+      imagesInput.addEventListener('change', function () {
+        imagePreview.innerHTML = ''
+      
+        for (const file of this.files) {
+          const reader = new FileReader()
+          reader.onload = function (e) {
+            const imgContainer = document.createElement('div')
+            imgContainer.className = 'relative'
+      
+            const img = document.createElement('img')
+            img.src = e.target.result
+            img.className = 'max-w-full h-auto'
+            imgContainer.appendChild(img)
+      
+            const deleteBtn = document.createElement('button')
+            deleteBtn.type = 'button'
+            deleteBtn.className = 'absolute top-0 left-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold hover:bg-red-600 cursor-pointer'
+            deleteBtn.innerHTML = '&times;'
+            deleteBtn.addEventListener('click', function () {
+              imgContainer.remove()
+            })
+            imgContainer.appendChild(deleteBtn)
+      
+            const inputDesc = document.createElement('input')
+            inputDesc.type = 'text'
+            inputDesc.name = 'imageDescriptions[]'
+            inputDesc.className = 'block w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500 mt-2'
+            inputDesc.placeholder = '请输入图片描述'
+      
+            imgContainer.appendChild(inputDesc)
+            imagePreview.appendChild(imgContainer)
+          }
+          reader.readAsDataURL(file)
+        }
+      })
+    </script>
+  </body>
+</html>
