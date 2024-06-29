@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理后台 - AyaBlogs</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  </head>
+  <body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white shadow-lg border-b-2">
+      <div class="px-4 py-6 flex justify-between items-center w-full">
+        <a href="#" class="text-xl font-semibold text-gray-800">AYABlogs 管理后台</a>
+        <div class="flex items-center space-x-4">
+          <span class="text-gray-600">欢迎, 管理员</span>
+          <a href="{{ url_for('logout') }}" class="text-gray-600 hover:text-gray-800">退出登录</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex-grow flex">
+      <!-- 侧边栏 -->
+      <nav class="bg-gray-800 text-gray-200 w-64 space-y-6 py-7 px-2">
+        <div>
+          <a href="#" class="text-2xl font-semibold text-gray-200">管理后台</a>
+        </div>
+        <div>
+          <a href="#blog-management" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">博客文章管理</a>
+          <a href="#announcement-management" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">公告管理</a>
+          <a href="#vote-management" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">投票管理</a>
+          <a href="#album-settings" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">个人相册设置</a>
+          <a href="#user-settings" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">用户设置</a>
+        </div>
+      </nav>
+
+      <!-- 主内容 -->
+      <main class="flex-grow p-6">
+        <!-- 博客文章管理 -->
+        <section id="blog-management" class="mb-8">
+          <h2 class="text-2xl font-semibold text-gray-900 mb-4">博客文章管理</h2>
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-semibold">所有文章</h3>
+              <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">新建文章</button>
+            </div>
+            <table class="min-w-full bg-white">
+              <thead>
+                <tr>
+                  <th class="py-2">标题</th>
+                  <th class="py-2">作者</th>
+                  <th class="py-2">发布时间</th>
+                  <th class="py-2">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="py-2">示例文章</td>
+                  <td class="py-2">管理员</td>
+                  <td class="py-2">2024-06-29</td>
+                  <td class="py-2">
+                    <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">编辑</button>
+                    <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">删除</button>
+                  </td>
+                </tr>
+                <!-- 更多文章行 -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 公告管理 -->
+        <section id="announcement-management" class="mb-8">
+          <h2 class="text-2xl font-semibold text-gray-900 mb-4">公告管理</h2>
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-semibold">所有公告</h3>
+              <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">新建公告</button>
+            </div>
+            <table class="min-w-full bg-white">
+              <thead>
+                <tr>
+                  <th class="py-2">标题</th>
+                  <th class="py-2">发布时间</th>
+                  <th class="py-2">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="py-2">示例公告</td>
+                  <td class="py-2">2024-06-29</td>
+                  <td class="py-2">
+                    <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">编辑</button>
+                    <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">删除</button>
+                  </td>
+                </tr>
+                <!-- 更多公告行 -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 投票管理 -->
+        <section id="vote-management" class="mb-8">
+          <h2 class="text-2xl font-semibold text-gray-900 mb-4">投票管理</h2>
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-semibold">所有投票</h3>
+              <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">新建投票</button>
+            </div>
+            <table class="min-w-full bg-white">
+              <thead>
+                <tr>
+                  <th class="py-2">标题</th>
+                  <th class="py-2">创建时间</th>
+                  <th class="py-2">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="py-2">示例投票</td>
+                  <td class="py-2">2024-06-29</td>
+                  <td class="py-2">
+                    <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">编辑</button>
+                    <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">删除</button>
+                  </td>
+                </tr>
+                <!-- 更多投票行 -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 个人相册设置 -->
+        <section id="album-settings" class="mb-8">
+          <h2 class="text-2xl font-semibold text-gray-900 mb-4">个人相册设置</h2>
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-semibold">所有图片</h3>
+              <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">上传新图片</button>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+              <div class="bg-gray-200 p-4 rounded-lg shadow">
+                <img src="example.jpg" alt="Example" class="w-full h-32 object-cover rounded-lg mb-2" />
+                <div class="flex justify-between items-center">
+                  <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">编辑</button>
+                  <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">删除</button>
+                </div>
+              </div>
+              <!-- 更多图片 -->
+            </div>
+          </div>
+        </section>
+
+        <!-- 用户设置 -->
+        <section id="user-settings">
+          <h2 class="text-2xl font-semibold text-gray-900 mb-4">用户设置</h2>
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-semibold">所有用户</h3>
+              <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">添加用户</button>
+            </div>
+            <table class="min-w-full bg-white">
+              <thead>
+                <tr></tr>
+              </thead>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

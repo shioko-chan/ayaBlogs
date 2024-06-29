@@ -1,4 +1,14 @@
-from flask import Flask, jsonify, render_template, request, session, redirect, url_for
+from flask import (
+    Flask,
+    jsonify,
+    render_template,
+    request,
+    session,
+    redirect,
+    url_for,
+    flash,
+    send_from_directory,
+)
 from flask_mail import Message, Mail
 import pymssql
 from flask_cors import CORS
@@ -104,11 +114,18 @@ def get_articles(condition=None, params=None) -> list:
         {
             "title": title,
             "content": content,
-            "images": query_database(
-                "select imgpath from images where containBy=%d", (pid,)
-            ),
+            "images": [
+                {"name": img[0], "describe": img[1]}
+                for img in query_database(
+                    "select imgname,describe from image where containBy=%d",
+                    params=(pid,),
+                )
+            ],
             "timestamp": createAt,
-            "author": author,
+            "author_id": author,
+            "author_name": query_database(
+                "select uname from usr where uid=%d", params=(author,)
+            )[0][0],
         }
         for pid, content, title, author, createAt in list
     ]
@@ -116,7 +133,6 @@ def get_articles(condition=None, params=None) -> list:
 
 def check_email_service(email):
     domain = email.split("@")[1]
-
     try:
         mx_records = dns.resolver.resolve(domain, "MX")
         if mx_records:
@@ -127,6 +143,11 @@ def check_email_service(email):
         return False
 
     return False
+
+
+@app.route("/storage/<filename>")
+def storage(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 
 @app.route("/register/validate", methods=["POST"])
@@ -142,7 +163,7 @@ def validate_mail():
         if not check_email_service(email):
             return jsonify({"status": "error"})
 
-        if query_database("select * from usr where uemail=%s", (email,)):
+        if query_database("select * from usr where uemail=%s", params=(email,)):
             return jsonify({"status": "email-duplicate"})
         try:
             validateCode = random.randint(100000, 999999)
@@ -177,7 +198,9 @@ def index():
 def mainpage(username):
     user = session.get("user")
     if not (user is not None and user.uname == username):
-        uid = query_database("select uid from usr where uname=%s", (username,))[0]
+        uid = query_database("select uid from usr where uname=%s", params=(username,))[
+            0
+        ]
     else:
         uid = user.uid
     return render_template(
@@ -211,7 +234,7 @@ def search_in_user(username):
                 }
                 for uname, uemail, ubirthday, usex, uintro in query_database(
                     "select uname,uemail,ubirthday,usex,uintro from usr where uname like %s or uemail like %s",
-                    ("%" + keyword + "%",) * 2,
+                    params=("%" + keyword + "%",) * 2,
                 )
             ],
             articles=get_articles(
@@ -224,11 +247,11 @@ def search_in_user(username):
             keyword = request.json["query"]
             usrs = query_database(
                 "select uname from usr where uname like %s union select uemail from usr where uemail like %s",
-                ("%" + keyword + "%",) * 2,
+                params=("%" + keyword + "%",) * 2,
             )
             articles = query_database(
                 "select title from passage where title like %s union select content from passage where content like %s",
-                ("%" + keyword + "%",) * 2,
+                params=("%" + keyword + "%",) * 2,
             )
             return jsonify({"usrs": usrs, "articles": articles})
         else:
@@ -242,6 +265,7 @@ def search():
         user = session.get("user")
         return render_template(
             "index.html",
+            user=user,
             is_authenticated=user is not None,
             search_user=[
                 {
@@ -253,7 +277,7 @@ def search():
                 }
                 for uname, uemail, ubirthday, usex, uintro in query_database(
                     "select uname,uemail,ubirthday,usex,uintro from usr where uname like %s or uemail like %s",
-                    ("%" + keyword + "%",) * 2,
+                    params=("%" + keyword + "%",) * 2,
                 )
             ],
             articles=get_articles(
@@ -266,11 +290,11 @@ def search():
             keyword = request.json["query"]
             usrs = query_database(
                 "select uname from usr where uname like %s union select uemail from usr where uemail like %s",
-                ("%" + keyword + "%",) * 2,
+                params=("%" + keyword + "%",) * 2,
             )
             articles = query_database(
                 "select title from passage where title like %s union select content from passage where content like %s",
-                ("%" + keyword + "%",) * 2,
+                params=("%" + keyword + "%",) * 2,
             )
             return jsonify({"usrs": usrs, "articles": articles})
         else:
@@ -296,7 +320,7 @@ def login():
                 upassword = request.form["password"]
                 users = query_database(
                     "select passwordhash,salt,uid,uname from usr where uname=%s",
-                    (uname,),
+                    params=(uname,),
                 )
                 if not users:
                     return jsonify({"status": "user-not-exist"})
@@ -359,24 +383,30 @@ def register():
 
 @app.route("/editor", methods=["GET", "POST"])
 def editor():
-    return render_template("editor.html", random_background=random_image())
+    user = session.get("user")
+    return render_template(
+        "editor.html",
+        random_background=random_image(),
+        user=user,
+        is_authenticated=user is not None,
+    )
 
 
 @app.route("/publish", methods=["POST"])
 def publish():
     if request.form:
-        # user = session.get("user")
-        # if not user:
-        #     return jsonify({"status": "unauthorized"})
+        user = session.get("user")
+        if not user:
+            return jsonify({"status": "unauthorized"})
         title = request.form["title"]
         content = request.form["content"]
         article_id = query_database(
             """declare @pid bigint;
                 exec insertarticle @title=%s,@content=%s,@author=%s,@pid=@pid output;
                 select @pid as pid;""",
-            params=(title, content, 0),
+            params=(title, content, user.uid),
         )[0][0]
-        print(article_id)
+        print(request.files)
         if "images" in request.files:
             images = request.files.getlist("images")
             image_descriptions = request.form.getlist("imageDescriptions[]")
@@ -396,14 +426,38 @@ def publish():
                         else filename
                     )
                     query_database(
-                        "insert into images(imgpath,containBy,describe) values(%s,convert(bigint,%s),%s)",
+                        "insert into image(imgname,containBy,describe) values(%s,convert(bigint,%s),%s)",
                         returns=False,
-                        params=(str(image_path), article_id, description),
+                        params=(filename, article_id, description),
                     )
                 else:
-                    return jsonify({"error": "File type not allowed"}), 400
+                    flash("图片错误！", "success")
+                    return redirect(request.referrer or url_for("index"))
 
-    return jsonify({"status": "success"})
+    flash("提交成功！", "success")
+    return redirect(url_for("mainpage", username=user.uname) or url_for("index"))
+
+
+@app.route("/article/<int:pid>")
+def article(pid):
+    user = session.get("user")
+    return render_template(
+        "article.html",
+        random_background=random_image(),
+        user=user,
+        article=get_articles("where pid=%d", (pid,))[0],
+        is_authenticated=user is not None,
+    )
+
+
+@app.route("/mainpage/<username>/management")
+def manage(username):
+    user = session.get("user")
+    if not user or user.uname != username:
+        return redirect(url_for("index"))
+    return render_template(
+        "manage.html",
+    )
 
 
 if __name__ == "__main__":

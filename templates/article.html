@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AyaBlogs - 自由的博客平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  </head>
+  <body class="bg-gray-100 flex flex-col min-h-screen">
+    <header class="bg-white shadow-lg border-b-2">
+      <div class="px-4 py-6 flex justify-between items-center w-full">
+        <a href="#" class="text-xl font-semibold text-gray-800 ml-10">AYABlogs</a>
+        <div class="flex justify-between items-center mr-10">
+          <nav class="mr-6">
+            <ul class="flex space-x-4">
+              {% if is_authenticated %}
+                {% if user.uname == mainpage_user %}
+                  <li>
+                    <a href="{{ url_for('mainpage', username=user.uname) }}" class="text-gray-600 hover:text-gray-800">管理后台</a>
+                  </li>
+                {% else %}
+                  <li>
+                    <a href="{{ url_for('mainpage', username=user.uname) }}" class="text-gray-600 hover:text-gray-800">前往个人主页</a>
+                  </li>
+                {% endif %}
+                <li>
+                  <a href="{{ url_for('logout') }}" class="text-gray-600 hover:text-gray-800">退出登录</a>
+                </li>
+              {% else %}
+                <li>
+                  <a href="{{ url_for('login') }}" class="text-gray-600 hover:text-gray-800">登录</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-6">
+      <article class="bg-white p-6 rounded-lg shadow-md">
+        <header>
+          <h1 class="text-2xl font-bold mb-4">{{ article.title }}</h1>
+          <p class="text-gray-600 text-sm">
+            <a class="text-blue-500 underline" href="{{ url_for('mainpage', username=article.author_name) }}">{{ article.author_name }}</a> - {{ article.timestamp }}
+          </p>
+        </header>
+        <section class="mt-6">
+          <p>{{ article.content }}</p>
+        </section>
+        {% if article.images %}
+          <div class="mt-6">
+            <h2 class="text-xl font-semibold mb-4">附图</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {% for image in article.images %}
+                <div class="relative">
+                  <img src="{{ url_for('storage', filename=image.name) }}" alt="{{ image.describe }}" class="w-full h-48 object-cover rounded-lg shadow-md" />
+                  <p class="text-gray-600 text-sm mt-2">{{ image.describe }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </article>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-5">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <h5 class="text-lg font-semibold">AYABlogs</h5>
+          <p class="text-sm">Copyleft 2024 AYA Blogs. No rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

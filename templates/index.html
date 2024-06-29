@@ -14,27 +14,28 @@
     <header class="bg-white shadow-lg border-b-2">
       <div class="px-4 py-6 flex justify-between items-center w-full">
         <a href="#" class="text-xl font-semibold text-gray-800 ml-10">AYABlogs</a>
+        <div class="font-bold text-gray-800 text-2xl">{{ mainpage_user }}的个人空间</div>
         <div class="flex justify-between items-center mr-10">
           <nav class="mr-6">
             <ul class="flex space-x-4">
               {% if is_authenticated %}
                 {% if user.uname == mainpage_user %}
                   <li>
-                    <a href="{{ url_for('mainpage', username=user.uname) }}" class="text-gray-600 hover:text-gray-800">管理后台</a>
+                    <a href="{{ url_for('manage', username=user.uname) }}" class="text-gray-600 hover:text-gray-800">管理后台</a>
                   </li>
                 {% else %}
                   <li>
                     <a href="{{ url_for('mainpage', username=user.uname) }}" class="text-gray-600 hover:text-gray-800">前往个人主页</a>
                   </li>
                 {% endif %}
+                <li>
+                  <a href="{{ url_for('logout') }}" class="text-gray-600 hover:text-gray-800">退出登录</a>
+                </li>
               {% else %}
                 <li>
                   <a href="{{ url_for('login') }}" class="text-gray-600 hover:text-gray-800">登录</a>
                 </li>
               {% endif %}
-              <li>
-                <a href="{{ url_for('logout') }}" class="text-gray-600 hover:text-gray-800">退出登录</a>
-              </li>
             </ul>
           </nav>
           <div class="relative flex justify-between items-center">

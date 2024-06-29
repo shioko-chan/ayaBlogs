@@ -30,14 +30,15 @@ create table passage
 	createAt datetime default getdate(),
 	author bigint foreign key references usr(uid) on delete cascade
 )
-create table images
+create table image
 (
 	imgid bigint primary key identity(0,1),
-	imgpath nvarchar(100),
+	imgname nvarchar(100),
 	containBy bigint foreign key references passage(pid) null,
+	ownedBy bigint foreign key references usr(uid) null,
 	describe nvarchar(200),
 )
-alter table usr add avatar bigint foreign key references images(imgid)
+alter table usr add avatar bigint foreign key references image(imgid)
 create table comment
 (
 	cid bigint primary key identity(0, 1),
@@ -75,12 +76,12 @@ if @@error!=0
 else
 	commit transaction
 go
-create trigger deleteImages on passage
+create trigger deleteimage on passage
 after delete
 as
 begin
-	delete from images
-	where images.containBy in (select pid
+	delete from image
+	where image.containBy in (select pid
 	from deleted)
 end
 go

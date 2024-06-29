@@ -23,34 +23,19 @@
                     <a href="{{ url_for('mainpage', username=user.uname) }}" class="text-gray-600 hover:text-gray-800">前往个人主页</a>
                   </li>
                 {% endif %}
+                <li>
+                  <a href="{{ url_for('logout') }}" class="text-gray-600 hover:text-gray-800">退出登录</a>
+                </li>
               {% else %}
                 <li>
                   <a href="{{ url_for('login') }}" class="text-gray-600 hover:text-gray-800">登录</a>
                 </li>
               {% endif %}
-              <li>
-                <a href="{{ url_for('logout') }}" class="text-gray-600 hover:text-gray-800">退出登录</a>
-              </li>
             </ul>
           </nav>
-          <div class="relative flex justify-between items-center">
-            {% if is_user_page %}
-              <form action="{{ url_for('search', username=mainpage_user) }}" method="post">
-                <input id="search-input" type="text" name="search" placeholder="搜索当前用户内容" class="px-3 py-2 w-64 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <button type="submit" class="ml-4"><image src="{{ url_for('static', filename='icon/search.png') }}" class="aspect-square w-5 self-center"></image></button>
-              </form>
-            {% else %}
-              <form action="{{ url_for('search') }}" method="post">
-                <input id="search-input" type="text" name="search" placeholder="全站查询，搜索博文、用户" class="px-3 py-2 w-64 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <button type="submit" class="ml-4"><image src="{{ url_for('static', filename='icon/search.png') }}" class="aspect-square w-5 self-center"></image></button>
-              </form>
-            {% endif %}
-            <div id="search-results" class="absolute z-10 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg top-full hidden"></div>
-          </div>
         </div>
       </div>
     </header>
-
     <main class="flex-1">
       <div class="container mx-auto px-4 py-8">
         <form id="blogForm" enctype="multipart/form-data" method="POST" action="{{ url_for('publish') }}">
