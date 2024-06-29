@@ -30,6 +30,14 @@ create table passage
 	createAt datetime default getdate(),
 	author bigint foreign key references usr(uid) on delete cascade
 )
+create table announcement
+(
+	aid bigint primary key identity(0, 1),
+	title nvarchar(255) not null,
+	content nvarchar(max) not null,
+	createAt datetime default getdate(),
+	author bigint foreign key references usr(uid) on delete cascade
+)
 create table image
 (
 	imgid bigint primary key identity(0,1),

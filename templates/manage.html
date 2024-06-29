@@ -18,7 +18,6 @@
     </header>
 
     <div class="flex-grow flex">
-      <!-- 侧边栏 -->
       <nav class="bg-gray-800 text-gray-200 w-64 space-y-6 py-7 px-2">
         <div>
           <a href="#" class="text-2xl font-semibold text-gray-200">管理后台</a>
@@ -32,9 +31,7 @@
         </div>
       </nav>
 
-      <!-- 主内容 -->
       <main class="flex-grow p-6">
-        <!-- 博客文章管理 -->
         <section id="blog-management" class="mb-8">
           <h2 class="text-2xl font-semibold text-gray-900 mb-4">博客文章管理</h2>
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -42,7 +39,7 @@
               <h3 class="text-xl font-semibold">所有文章</h3>
               <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">新建文章</button>
             </div>
-            <table class="min-w-full bg-white">
+            <table class="min-w-full bg-white text-center">
               <thead>
                 <tr>
                   <th class="py-2">标题</th>
@@ -52,22 +49,21 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td class="py-2">示例文章</td>
-                  <td class="py-2">管理员</td>
-                  <td class="py-2">2024-06-29</td>
-                  <td class="py-2">
-                    <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">编辑</button>
-                    <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">删除</button>
-                  </td>
-                </tr>
-                <!-- 更多文章行 -->
+                {% for passage in passages %}
+                  <tr>
+                    <td class="py-2">{{ passage.title }}</td>
+                    <td class="py-2">{{ passage.author }}</td>
+                    <td class="py-2">{{ passage.timestamp }}</td>
+                    <td class="py-2">
+                      <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">编辑</button>
+                      <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">删除</button>
+                    </td>
+                  </tr>
+                {% endfor %}
               </tbody>
             </table>
           </div>
         </section>
-
-        <!-- 公告管理 -->
         <section id="announcement-management" class="mb-8">
           <h2 class="text-2xl font-semibold text-gray-900 mb-4">公告管理</h2>
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -75,7 +71,7 @@
               <h3 class="text-xl font-semibold">所有公告</h3>
               <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">新建公告</button>
             </div>
-            <table class="min-w-full bg-white">
+            <table class="min-w-full bg-white text-center">
               <thead>
                 <tr>
                   <th class="py-2">标题</th>
@@ -84,21 +80,21 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td class="py-2">示例公告</td>
-                  <td class="py-2">2024-06-29</td>
-                  <td class="py-2">
-                    <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">编辑</button>
-                    <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">删除</button>
-                  </td>
-                </tr>
-                <!-- 更多公告行 -->
+                {% for announcement in announcements %}
+                  <tr>
+                    <td class="py-2">{{ announcement.title }}</td>
+                    <td class="py-2">{{ announcement.timestamp }}</td>
+                    <td class="py-2">
+                      <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">编辑</button>
+                      <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">删除</button>
+                    </td>
+                  </tr>
+                {% endfor %}
               </tbody>
             </table>
           </div>
         </section>
 
-        <!-- 投票管理 -->
         <section id="vote-management" class="mb-8">
           <h2 class="text-2xl font-semibold text-gray-900 mb-4">投票管理</h2>
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -106,7 +102,7 @@
               <h3 class="text-xl font-semibold">所有投票</h3>
               <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">新建投票</button>
             </div>
-            <table class="min-w-full bg-white">
+            <table class="min-w-full bg-white text-center">
               <thead>
                 <tr>
                   <th class="py-2">标题</th>
@@ -115,21 +111,20 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td class="py-2">示例投票</td>
-                  <td class="py-2">2024-06-29</td>
-                  <td class="py-2">
-                    <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">编辑</button>
-                    <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">删除</button>
-                  </td>
-                </tr>
-                <!-- 更多投票行 -->
+                {% for poll in polls %}
+                  <tr>
+                    <td class="py-2">{{ poll.title }}</td>
+                    <td class="py-2">{{ poll.timestamp }}</td>
+                    <td class="py-2">
+                      <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">编辑</button>
+                      <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">删除</button>
+                    </td>
+                  </tr>
+                {% endfor %}
               </tbody>
             </table>
           </div>
         </section>
-
-        <!-- 个人相册设置 -->
         <section id="album-settings" class="mb-8">
           <h2 class="text-2xl font-semibold text-gray-900 mb-4">个人相册设置</h2>
           <div class="bg-white p-6 rounded-lg shadow-md">
@@ -138,31 +133,47 @@
               <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">上传新图片</button>
             </div>
             <div class="grid grid-cols-3 gap-4">
-              <div class="bg-gray-200 p-4 rounded-lg shadow">
-                <img src="example.jpg" alt="Example" class="w-full h-32 object-cover rounded-lg mb-2" />
-                <div class="flex justify-between items-center">
-                  <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">编辑</button>
-                  <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">删除</button>
+              {% for image in images %}
+                <div class="bg-gray-200 p-4 rounded-lg shadow">
+                  <img src="{{ url_for('storage', filename=image.name) }}" alt="Example" class="w-full h-32 object-cover rounded-lg mb-2" />
+                  <div class="flex justify-between items-center">
+                    <button class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">编辑</button>
+                    <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">删除</button>
+                  </div>
                 </div>
-              </div>
-              <!-- 更多图片 -->
+              {% endfor %}
             </div>
           </div>
         </section>
-
-        <!-- 用户设置 -->
         <section id="user-settings">
           <h2 class="text-2xl font-semibold text-gray-900 mb-4">用户设置</h2>
           <div class="bg-white p-6 rounded-lg shadow-md">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-xl font-semibold">所有用户</h3>
-              <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">添加用户</button>
+            <div class="mb-4">
+              <label for="username" class="block text-sm font-medium text-gray-700">用户名</label>
+              <input type="text" id="username" name="username" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm cursor-not-allowed" value="用户名" readonly />
             </div>
-            <table class="min-w-full bg-white">
-              <thead>
-                <tr></tr>
-              </thead>
-            </table>
+            <div class="mb-4">
+              <label for="email" class="block text-sm font-medium text-gray-700">邮箱</label>
+              <input type="email" id="email" name="email" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm cursor-not-allowed" value="example@example.com" readonly />
+            </div>
+            <div class="mb-4">
+              <label for="birthday" class="block text-sm font-medium text-gray-700">生日</label>
+              <input type="date" id="birthday" name="birthday" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+            </div>
+            <div class="mb-4">
+              <label for="gender" class="block text-sm font-medium text-gray-700">性别</label>
+              <select id="gender" name="gender" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <option value="0">男</option>
+                <option value="1">女</option>
+                <option value="2">其他</option>
+                <option value="3">保密</option>
+              </select>
+            </div>
+            <div class="mb-4">
+              <label for="bio" class="block text-sm font-medium text-gray-700">自我介绍</label>
+              <textarea id="bio" name="bio" rows="3" class="mt-1 block w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+            </div>
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">保存设置</button>
           </div>
         </section>
       </main>

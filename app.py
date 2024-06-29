@@ -392,6 +392,17 @@ def editor():
     )
 
 
+@app.route("/veditor")
+def veditor():
+    user = session.get("user")
+    return render_template(
+        "veditor.html",
+        random_background=random_image(),
+        user=user,
+        is_authenticated=user is not None,
+    )
+
+
 @app.route("/publish", methods=["POST"])
 def publish():
     if request.form:
@@ -455,8 +466,40 @@ def manage(username):
     user = session.get("user")
     if not user or user.uname != username:
         return redirect(url_for("index"))
+
+    passages = query_database(
+        "select * from passage where author=%d", params=(user.uid,)
+    )
+    announcements = query_database(
+        "select * from announcement where author=%d", params=(user.uid,)
+    )
+    polls = query_database("select * from vote where creator=%d", params=(user.uid,))
+    images = query_database("select * from image where ownedBy=%d", params=(user.uid,))
+    user = query_database("select * from usr where uid=%d", params=(user.uid,))
     return render_template(
         "manage.html",
+        passages=[
+            {"title": item[2], "author": item[4], "timestamp": item[3], "pid": item[0]}
+            for item in passages
+        ],
+        announcements=[
+            {"title": item[1], "timestamp": item[3], "aid": item[0]}
+            for item in announcements
+        ],
+        polls=[
+            {"title": item[2], "timestamp": item[6], "vid": item[0]} for item in polls
+        ],
+        images=[
+            {"imgname": item[1], "describe": item[4], "imgid": item[0]}
+            for item in images
+        ],
+        user={
+            "uname": user[0][3],
+            "uemail": user[0][4],
+            "ubirthday": user[0][5],
+            "usex": user[0][6],
+            "uintro": user[0][7],
+        },
     )
 
 

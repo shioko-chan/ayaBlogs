@@ -14,7 +14,9 @@
     <header class="bg-white shadow-lg border-b-2">
       <div class="px-4 py-6 flex justify-between items-center w-full">
         <a href="#" class="text-xl font-semibold text-gray-800 ml-10">AYABlogs</a>
-        <div class="font-bold text-gray-800 text-2xl">{{ mainpage_user }}的个人空间</div>
+        {% if is_user_page %}
+          <div class="font-bold text-gray-800 text-2xl">{{ mainpage_user }}的个人空间</div>
+        {% endif %}
         <div class="flex justify-between items-center mr-10">
           <nav class="mr-6">
             <ul class="flex space-x-4">
