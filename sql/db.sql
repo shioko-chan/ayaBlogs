@@ -1,5 +1,5 @@
 use master
-if exists (select *
+if exists (select 1
 from sys.databases
 where name='ayablogs')
 begin
@@ -8,102 +8,115 @@ begin
 	drop database ayablogs
 end
 create database ayablogs
+go
+
 use ayablogs
 begin transaction
 create table usr
 (
-	uid bigint primary key identity(0, 1),
-	passwordhash varbinary(64) not null,
+	id bigint primary key identity(0, 1),
+	password_hash varbinary(64) not null,
 	salt varbinary(64) not null,
-
-	uname nvarchar(20) not null unique,
-	uemail nvarchar(50) not null unique,
-	ubirthday date check(ubirthday between '1900-01-01' and '2024-6-25'),
-	usex smallint check(usex between 0 and 4),
-	uintro nvarchar(max)
+	username nvarchar(20) not null unique,
+	email nvarchar(50) not null unique,
+	birthday date check(birthday between '1900-01-01' and '2024-6-25'),
+	sex smallint check(sex between 0 and 4),
+	intro nvarchar(max),
+	is_administrator bit default 0 not null,
 )
 create table passage
 (
-	pid bigint primary key identity(0, 1),
-	content nvarchar(max) not null,
+	id bigint primary key identity(0, 1),
 	title nvarchar(255) not null,
-	createAt datetime default getdate(),
-	author bigint foreign key references usr(uid) on delete cascade
+	content nvarchar(max) not null,
+	create_at datetime default getdate(),
+	author_id bigint foreign key references usr(id) on delete cascade,
 )
 create table announcement
 (
-	aid bigint primary key identity(0, 1),
+	id bigint primary key identity(0, 1),
 	title nvarchar(255) not null,
 	content nvarchar(max) not null,
-	createAt datetime default getdate(),
-	author bigint foreign key references usr(uid) on delete cascade
+	create_at datetime default getdate(),
+	author_id bigint foreign key references usr(id) on delete cascade,
 )
-create table image
+create table img
 (
-	imgid bigint primary key identity(0,1),
-	imgname nvarchar(100),
-	containBy bigint foreign key references passage(pid) null,
-	ownedBy bigint foreign key references usr(uid) null,
+	id bigint primary key identity(0,1),
+	img_name nvarchar(100),
 	describe nvarchar(200),
+	create_at datetime default getdate(),
+	contain_by bigint foreign key references passage(id) null,
+	own_by bigint foreign key references usr(id) null,
 )
-alter table usr add avatar bigint foreign key references image(imgid)
+alter table usr add avatar bigint foreign key references img(id)
 create table comment
 (
-	cid bigint primary key identity(0, 1),
-	commenter bigint foreign key references usr(uid),
-	passage bigint foreign key references passage(pid) on delete cascade,
+	id bigint primary key identity(0, 1),
 	content nvarchar(500) not null,
-	createAt datetime default getdate()
+	create_at datetime default getdate(),
+	author_id bigint foreign key references usr(id),
+	contain_by bigint foreign key references passage(id) on delete cascade,
 )
 create table vote
 (
-	vid bigint primary key identity(0, 1),
-	creator bigint foreign key references usr(uid) on delete cascade,
-	title nvarchar(255) not null,
-	content nvarchar(max) not null,
-	choices varchar(max) not null,
-	choicesCnt smallint not null,
-	createAt datetime default getdate()
+	id bigint primary key identity(0, 1),
+	content nvarchar(255) not null,
+	create_at datetime default getdate(),
+	author_id bigint foreign key references usr(id) on delete cascade,
+)
+create table option_item
+(
+	id bigint primary key identity(0, 1),
+	content nvarchar (255) not null,
+	vote_cnt bigint default 0,
+	contain_by bigint foreign key references vote(id) on delete cascade,
 )
 create table poll
 (
-	poid bigint primary key identity(0, 1),
-	poller bigint foreign key references usr(uid),
-	voted bigint foreign key references vote(vid) on delete cascade,
-	attitude smallint not null,
-	createAt datetime default getdate(),
+	id bigint primary key identity(0, 1),
+	create_at datetime default getdate(),
+	poller_id bigint foreign key references usr(id),
+	option_item_id bigint foreign key references option_item(id) on delete cascade,
 )
-if not exists(select 1
+
+if not exists(select *
 from sys.sql_logins
 where name='shiori')
 	create login shiori with password='password'
 create user shiori for login shiori
 alter role db_owner add member shiori
+
 if @@error!=0
 	rollback transaction
 else
 	commit transaction
 go
-create trigger deleteimage on passage
-after delete
+
+create trigger update_vote_cnt on poll
+after insert 
 as
 begin
-	delete from image
-	where image.containBy in (select pid
-	from deleted)
+
+	update option_item set vote_cnt=vote_cnt+temporary.cnt from (
+	select option_item_id, count(*) as cnt
+		from inserted
+		group by option_item_id) as temporary, option_item
+	where option_item.id=temporary.option_item_id
 end
 go
-create proc InsertArticle
+
+create procedure insert_passage
 	@title nvarchar(max),
 	@content nvarchar(max),
-	@author bigint,
+	@author_id bigint,
 	@pid bigint out
 as
 begin
 	set nocount on;
 	insert into passage
-		(title, content, author)
+		(title, content, author_id)
 	values
-		(@title, @content, @author);
+		(@title, @content, @author_id);
 	set @pid = scope_identity();
 end

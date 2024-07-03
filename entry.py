@@ -9,25 +9,34 @@ from flask import (
     flash,
     send_from_directory,
 )
-from flask_login import LoginManager, login_user, login_required, logout_user
+from flask_login import (
+    LoginManager,
+    login_user,
+    login_required,
+    logout_user,
+    current_user,
+)
 from flask_mail import Message, Mail
 from flask_session import Session
 
-from dns import resolver as dns_resolver
+from models import User, Passage, Announcement, Vote, OptionItem, Comment
 from pathlib import Path
 from passlib import pwd
 
 import tomllib
 import random
 import time
-import hashlib
 import secrets
+
+
+from utilities import response, check_email_service, hash_password
 
 config = tomllib.load(open("config.toml", "rb"))
 
 MAIL_SERVER = config["mail"]["server"]
 MAIL_USER = config["mail"]["user"]
 MAIL_PASSWORD = config["mail"]["password"]
+MAIL_PORT = config["mail"]["port"]
 UPLOAD_FOLDER = config["image"]["upload_folder"]
 ALLOWED_EXTENSIONS = config["image"]["allowed_extensions"]
 SESSION_TYPE = config["session"]["type"]
@@ -41,13 +50,15 @@ app.config.update(
     MAIL_PASSWORD=MAIL_PASSWORD,
     MAIL_USE_SSL=True,
     MAIL_USE_TLS=False,
-    MAIL_PORT=465,
+    MAIL_PORT=MAIL_PORT,
 )
 
 app.config.update(SESSION_TYPE=SESSION_TYPE)
 
+
 login_manager = LoginManager()
 login_manager.init_app(app)
+
 
 mail = Mail(app)
 
@@ -62,86 +73,49 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def get_articles(condition=None, params=None) -> list:
-    query = "select pid,content,title,author,createAt from passage {}"
-    list = query_database(
-        query.format(condition) if condition else query.format(""), params=params
-    )
-    return [
-        {
-            "title": title,
-            "content": content,
-            "images": [
-                {"name": img[0], "describe": img[1]}
-                for img in query_database(
-                    "select imgname,describe from image where containBy=%d",
-                    params=(pid,),
-                )
-            ],
-            "timestamp": createAt,
-            "author_id": author,
-            "author_name": query_database(
-                "select uname from usr where uid=%d", params=(author,)
-            )[0][0],
-        }
-        for pid, content, title, author, createAt in list
-    ]
-
-
-def check_email_service(email):
-    domain = email.split("@")[1]
-    try:
-        mx_records = dns_resolver.resolve(domain, "MX")
-        if mx_records:
-            return True
-    except (dns_resolver.NoAnswer, dns_resolver.NXDOMAIN):
-        return False
-    except dns_resolver.LifetimeTimeout:
-        return False
-
-    return False
+def random_image():
+    return url_for("static", filename="bkg/" + random.choice(backgrounds).name)
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if request.method == "POST":
+    if request.method == "GET":
+        return render_template(
+            "login.html", random_background=random_image(), user=user
+        )
+    elif request.method == "POST":
         if request.form:
             try:
                 uname = request.form["username"]
                 upassword = request.form["password"]
-                users = query_database(
-                    "select passwordhash,salt,uid,uname from usr where uname=%s",
-                    params=(uname,),
-                )
-                if not users:
-                    return jsonify({"status": "user-not-exist"})
-                print(users[0][0], users[0][1], hash_password(upassword, users[0][1]))
-                if hash_password(upassword, users[0][1]) != users[0][0]:
-                    return jsonify({"status": "password-error"})
-
-                session["user"] = User(users[0][2], users[0][3])
-                return jsonify({"status": "success"})
-            except Exception as e:
-                print(e)
-                return jsonify({"status": "error"})
-        return jsonify({"status": "error"})
+                user = User.get_by_username(username=uname)
+                if not user:
+                    return response(success=False, mes="用户不存在")
+                if hash_password(upassword, user.salt) != user.password_hash:
+                    return response(success=False, mes="用户名或密码错误")
+                login_user(user, remember=True)
+                return response(success=True, mes="登录成功")
+            except Exception:
+                return response(success=False, mes="内部错误")
+        return response(success=False, mes="请求错误")
     else:
-        return render_template(
-            "login.html",
-            random_background=random_image(),
-            is_login=True,
-        )
+        return response(success=False, mes="请求错误")
 
 
-@app.route("/logout")
+@app.route("/logout", methods=["GET"])
 def logout():
-    session.pop("user")
+    logout_user()
     return redirect(url_for("index"))
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == "POST":
+    if request.method == "GET":
+        return render_template(
+            "login.html",
+            random_background=random_image(),
+        )
+    elif request.method == "POST":
         if request.form:
             try:
                 uname = request.form["username"]
@@ -164,12 +138,6 @@ def register():
                 print(e)
                 return jsonify({"status": "error"})
         return jsonify({"status": "error"})
-    else:
-        return render_template(
-            "login.html",
-            random_background=random_image(),
-            is_login=False,
-        )
 
 
 @app.route("/storage/<filename>")
@@ -326,16 +294,6 @@ def search():
             return jsonify({"usrs": usrs, "articles": articles})
         else:
             return "request unknown", 400
-
-
-def random_image():
-    return url_for("static", filename="bkg/" + random.choice(backgrounds).name)
-
-
-def hash_password(password, salt):
-    salted_password = salt + password.encode()
-    hashed_password = hashlib.sha512(salted_password).digest()
-    return hashed_password
 
 
 @app.route("/editor", methods=["GET", "POST"])
