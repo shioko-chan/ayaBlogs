@@ -9,19 +9,10 @@ from flask import (
     flash,
     send_from_directory,
 )
-from flask_login import (
-    LoginManager,
-    login_user,
-    login_required,
-    logout_user,
-    current_user,
-)
-from flask_mail import Message, Mail
-from flask_session import Session
 
-from models import User, Passage, Announcement, Vote, OptionItem, Comment
-from pathlib import Path
-from passlib import pwd
+
+from models import Usr, Passage, Announcement, Vote, OptionItem, Comment
+
 
 import tomllib
 import random
@@ -31,150 +22,10 @@ import secrets
 
 from utilities import response, check_email_service, hash_password
 
-config = tomllib.load(open("config.toml", "rb"))
-
-MAIL_SERVER = config["mail"]["server"]
-MAIL_USER = config["mail"]["user"]
-MAIL_PASSWORD = config["mail"]["password"]
-MAIL_PORT = config["mail"]["port"]
-UPLOAD_FOLDER = config["image"]["upload_folder"]
-ALLOWED_EXTENSIONS = config["image"]["allowed_extensions"]
-SESSION_TYPE = config["session"]["type"]
-
-app = Flask(__name__)
-app.secret_key = pwd.genword(entropy="secure", charset="ascii_72")
-
-app.config.update(
-    MAIL_SERVER=MAIL_SERVER,
-    MAIL_USERNAME=MAIL_USER,
-    MAIL_PASSWORD=MAIL_PASSWORD,
-    MAIL_USE_SSL=True,
-    MAIL_USE_TLS=False,
-    MAIL_PORT=MAIL_PORT,
-)
-
-app.config.update(SESSION_TYPE=SESSION_TYPE)
-
-
-login_manager = LoginManager()
-login_manager.init_app(app)
-
-
-mail = Mail(app)
-
-Session(app)
-
-save_path = Path(UPLOAD_FOLDER)
-save_path.mkdir(exist_ok=True)
-backgrounds = [file for file in Path("static/bkg").iterdir() if file.is_file()]
-
-
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-def random_image():
-    return url_for("static", filename="bkg/" + random.choice(backgrounds).name)
-
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "GET":
-        return render_template(
-            "login.html", random_background=random_image(), user=user
-        )
-    elif request.method == "POST":
-        if request.form:
-            try:
-                uname = request.form["username"]
-                upassword = request.form["password"]
-                user = User.get_by_username(username=uname)
-                if not user:
-                    return response(success=False, mes="用户不存在")
-                if hash_password(upassword, user.salt) != user.password_hash:
-                    return response(success=False, mes="用户名或密码错误")
-                login_user(user, remember=True)
-                return response(success=True, mes="登录成功")
-            except Exception:
-                return response(success=False, mes="内部错误")
-        return response(success=False, mes="请求错误")
-    else:
-        return response(success=False, mes="请求错误")
-
-
-@app.route("/logout", methods=["GET"])
-def logout():
-    logout_user()
-    return redirect(url_for("index"))
-
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "GET":
-        return render_template(
-            "login.html",
-            random_background=random_image(),
-        )
-    elif request.method == "POST":
-        if request.form:
-            try:
-                uname = request.form["username"]
-                upassword = request.form["password"]
-                uemail = request.form["email"]
-                uvalidate = request.form["code"]
-                code = session.get("validate_code")
-                print(code, uvalidate)
-                if code != int(uvalidate):
-                    return jsonify({"status": "invalid-code"})
-
-                salt = secrets.token_bytes(64)
-                query_database(
-                    "insert into usr(passwordhash, salt, uname, uemail) values(CONVERT(varbinary(64), %s),CONVERT(varbinary(64), %s),%s,%s)",
-                    returns=False,
-                    params=(hash_password(upassword, salt), salt, uname, uemail),
-                )
-                return jsonify({"status": "success"})
-            except Exception as e:
-                print(e)
-                return jsonify({"status": "error"})
-        return jsonify({"status": "error"})
-
 
 @app.route("/storage/<filename>")
 def storage(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
-
-
-@app.route("/register/validate", methods=["POST"])
-def validate_mail():
-    if request.json and "email" in request.json.keys():
-        email = request.json["email"]
-        timestamp = session.get("request_timestamp")
-        if timestamp and timestamp + 120 > time.time():
-            return jsonify({"status": "error"})
-        else:
-            session["request_timestamp"] = time.time()
-
-        if not check_email_service(email):
-            return jsonify({"status": "error"})
-
-        if query_database("select * from usr where uemail=%s", params=(email,)):
-            return jsonify({"status": "email-duplicate"})
-        try:
-            validateCode = random.randint(100000, 999999)
-            message = Message(
-                subject="ayaBlogs 验证码",
-                sender=MAIL_USER,
-                recipients=[email],
-                body=f"[ayaBlogs] 你好，欢迎注册ayaBlogs，你的验证码是 {validateCode}",
-            )
-            mail.send(message)
-            print(f"send validate code to {email} success")
-            session["validate_code"] = validateCode
-        except Exception as e:
-            print(e)
-            return jsonify({"status": "error"})
-        return jsonify({"status": "success"})
 
 
 @app.route("/")

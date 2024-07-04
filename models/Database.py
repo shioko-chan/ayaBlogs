@@ -32,6 +32,7 @@ class ConnectionPool:
             connection.commit()
         except Exception as e:
             connection.rollback()
+            print(transact)
             raise e
         finally:
             cursor.close()

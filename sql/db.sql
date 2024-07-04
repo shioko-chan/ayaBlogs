@@ -19,6 +19,7 @@ create table usr
 	salt varbinary(64) not null,
 	username nvarchar(20) not null unique,
 	email nvarchar(50) not null unique,
+	avatar nvarchar(100) default 'default.jpg',
 	birthday date check(birthday between '1900-01-01' and '2024-6-25'),
 	sex smallint check(sex between 0 and 4),
 	intro nvarchar(max),
@@ -47,9 +48,7 @@ create table img
 	describe nvarchar(200),
 	create_at datetime default getdate(),
 	contain_by bigint foreign key references passage(id) null,
-	own_by bigint foreign key references usr(id) null,
 )
-alter table usr add avatar bigint foreign key references img(id)
 create table comment
 (
 	id bigint primary key identity(0, 1),

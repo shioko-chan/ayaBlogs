@@ -1,4 +1,9 @@
-from User import User
-from models.DataModels import Passage, Poll, OptionItem, Vote, Announcement, Comment
-
-# from Comment import Comment
+from models.DataModels import (
+    Usr,
+    Passage,
+    Poll,
+    OptionItem,
+    Vote,
+    Announcement,
+    Comment,
+)
