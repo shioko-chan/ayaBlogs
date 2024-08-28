@@ -1,20 +1,26 @@
 from dbutils.pooled_db import PooledDB
 import pymssql
-import tomllib
 
 
 class ConnectionPool:
-    def __init__(self, db_host, db_user, db_pw, db_name):
+    def __init__(self, app):
+        print(
+            app.config["DB_SERVER"],
+            app.config["DB_USER"],
+            app.config["DB_PASSWORD"],
+            app.config["DB_NAME"],
+        )
         self.pool = PooledDB(
             creator=pymssql,
             mincached=2,
             maxcached=10,
-            host=db_host,
-            user=db_user,
-            password=db_pw,
-            database=db_name,
+            host=app.config["DB_SERVER"],
+            user=app.config["DB_USER"],
+            password=app.config["DB_PASSWORD"],
+            database=app.config["DB_NAME"],
             charset="utf8",
         )
+        app.extensions["pool"] = self
 
     def __call__(self, transact, params=None, have_return=True):
         connection = self.pool.connection()
@@ -38,15 +44,3 @@ class ConnectionPool:
             cursor.close()
             connection.close()
         return res
-
-
-config = tomllib.load(open("../config.toml", "rb"))
-
-DB_SERVER = config["database"]["server"]
-DB_USER = config["database"]["user"]
-DB_PASSWORD = config["database"]["password"]
-DB_NAME = config["database"]["name"]
-
-transact = ConnectionPool(
-    db_host=DB_SERVER, db_user=DB_USER, db_pw=DB_PASSWORD, db_name=DB_NAME
-)

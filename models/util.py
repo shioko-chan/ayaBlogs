@@ -1,4 +1,9 @@
-from Database import transact
+from flask import current_app
+
+
+def transact(transact, params=None, have_return=True):
+    pool = current_app.extensions["pool"]
+    return pool(transact, params, have_return)
 
 
 def unique(func):
@@ -20,4 +25,12 @@ def exists(cls, use_and_operator=True, **kwargs):
         f"SELECT 1 WHERE EXISTS(SELECT 1 FROM {cls.__name__} WHERE {f' {op} '.join([f'{key} = %s' for key in kwargs.keys()])})",
         tuple(kwargs.values()),
     )
-    return bool(val[0][0])
+    return bool(val)
+
+
+def get_config(key, default=None):
+    return current_app.config.get(key, default)
+
+
+def get_extension(key, default=None):
+    return current_app.extensions.get(key, default)

@@ -4,9 +4,7 @@ from typing import Optional
 
 from flask_login import UserMixin
 
-
-from Database import transact
-from util import unique, from_sql_results, exists
+from .util import unique, from_sql_results, exists, transact
 
 
 class NotExistError(Exception):
@@ -100,13 +98,10 @@ class HasTimeStamp:
     create_at: date
 
     @classmethod
-    def search_by_content(cls, keyword):
+    def get_latest(cls, num):
         return from_sql_results(
             cls,
-            transact(
-                f"SELECT * FROM {cls.__name__} WHERE content LIKE %s",
-                ("%" + keyword + "%",),
-            ),
+            transact(f"SELECT TOP {num} * FROM {cls.__name__} ORDER BY create_at DESC"),
         )
 
 
@@ -121,6 +116,18 @@ class HasContainer:
 
 
 @dataclass(eq=False, order=False)
+class HasHeat:
+    heat: int
+
+    @classmethod
+    def get_hottest(cls, num):
+        return from_sql_results(
+            cls,
+            transact(f"SELECT TOP {num} * FROM {cls.__name__} ORDER BY heat DESC"),
+        )
+
+
+@dataclass(eq=False, order=False)
 class Usr(HasId, UserMixin):
     password_hash: bytes
     salt: bytes
@@ -131,25 +138,22 @@ class Usr(HasId, UserMixin):
     sex: Optional[int] = None
     intro: Optional[str] = None
     is_administrator: bool = False
-    is_valid: bool = True
-
-    @property
-    def is_admin(self):
-        try:
-            self.reload_status()
-        except NotExistError:
-            self.is_valid = False
-        return self.is_valid and self.is_administrator
-
-    @property
-    def is_active(self):
-        return self.is_valid
 
     @classmethod
     @unique
     def get_by_username(cls, username):
         return from_sql_results(
             cls, transact("SELECT * FROM usr WHERE username = %s", (username,))
+        )
+
+    @classmethod
+    def search_by_username(cls, username):
+        return from_sql_results(
+            cls,
+            transact(
+                "SELECT * FROM usr WHERE username LIKE %s",
+                ("%" + username + "%",),
+            ),
         )
 
     @classmethod
@@ -162,34 +166,13 @@ class Usr(HasId, UserMixin):
 
 
 @dataclass(eq=False, order=False)
-class Passage(HasId, HasTitle, HasContent, HasTimeStamp, HasAuthor):
-    pass
-
-
-@dataclass(eq=False, order=False)
-class Announcement(HasId, HasTitle, HasContent, HasTimeStamp, HasAuthor):
+class Passage(HasId, HasTitle, HasContent, HasTimeStamp, HasAuthor, HasHeat):
     pass
 
 
 @dataclass(eq=False, order=False)
 class Comment(HasId, HasContent, HasTimeStamp, HasAuthor, HasContainer):
     pass
-
-
-@dataclass(eq=False, order=False)
-class Vote(HasId, HasContent, HasTimeStamp, HasAuthor):
-    pass
-
-
-@dataclass(eq=False, order=False)
-class OptionItem(HasId, HasContent, HasContainer):
-    vote_cnt: int
-
-
-@dataclass(eq=False, order=False)
-class Poll(HasId, HasTimeStamp):
-    poller_id: int
-    option_item_id: int
 
 
 @dataclass(eq=False, order=False)

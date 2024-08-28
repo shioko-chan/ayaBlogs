@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block head %}
+
+{% endblock %}
+
+{% block body %}
+  <body class="bg-gray-100 flex flex-col items-stretch justify-between h-screen = bg-cover bg-no-repeat flex-grow" style="background-image: url({{ random_background }});">
+    <main class="flex flex-col flex-grow justify-center items-center">
+      <div class="bg-white p-8 rounded-lg shadow-md w-96">
+        {% block mainbox %}
+
+        {% endblock %}
+      </div>
+    </main>
+    <footer class="bg-transparent text-white py-5">
+      <div class="w-full mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <h5 class="text-lg font-semibold">AYABlogs</h5>
+          <p class="text-sm">Copyleft 2024 AYA Blogs. No rights reserved.</p>
+          <p class="text-sm">Contact: shioriaya@foxmail.com</p>
+        </div>
+      </div>
+    </footer>
+    {% block script %}
+
+    {% endblock %}
+    <script>
+      const gRecaptchaUrl = "{{ url_for('auth.recaptcha') }}"
+    </script>
+    <script src="//recaptcha.net/recaptcha/api.js" async defer></script>
+  </body>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block body %}
+  <body class="bg-gray-100 flex flex-col items-stretch justify-between h-screen = bg-cover bg-no-repeat flex-grow" style="background-image: url({{ random_background }});">
+    <main class="flex flex-col flex-grow justify-center items-center">
+      <div id="ball" class="fixed bg-white rounded-full w-10 h-10"></div>
+    </main>
+    <footer class="bg-transparent text-white py-5">
+      <div class="w-full mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <h5 class="text-lg font-semibold">AYABlogs</h5>
+          <p class="text-sm">Copyleft 2024 AYA Blogs. No rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+    <script type="text/javascript">
+      document.addEventListener('DOMContentLoaded', () => {
+        const ball = document.getElementById('ball')
+        const W = document.body.clientWidth,
+          H = document.body.clientHeight,
+          R = ball.clientHeight / 2
+        ball.style.left = W / 2
+        ball.style.top = H / 2
+        const velocity = { x: 1, y: 1 },
+          velofactor = 5
+        let x = ball.offsetLeft,
+          y = ball.offsetTop
+        setInterval(() => {
+          if (x >= W - R || x <= R) {
+            velocity.x = -velocity.x
+          }
+          if (y >= H - R || y <= R) {
+            velocity.y = -velocity.y
+          }
+          x += velocity.x * velofactor
+          y += velocity.y * velofactor
+          ball.style.left = x + 'px'
+          ball.style.top = y + 'px'
+        }, 10)
+      })
+    </script>
+  </body>
+{% endblock %}

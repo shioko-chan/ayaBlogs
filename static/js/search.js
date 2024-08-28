@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             let keyword = searchInput.value.trim()
             if (keyword != val) { return }
-            console.log(cache)
+            // console.log(cache)
             if (cache.has(keyword)) {
                 let optionHtml = cache.get(keyword);
                 if (optionHtml === '') return;
