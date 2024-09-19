@@ -29,7 +29,7 @@ from random import randint
 from requests import request as req
 from models import UserCredential
 from .util import response, random_image, get_config, get_extension
-
+from enum import Enum
 import math
 
 auth_bp = Blueprint("auth", __name__)
@@ -61,20 +61,29 @@ def login():
             "login.html",
             random_background=random_image(),
             site_key=get_config("SITE_KEY"),
-            recaptcha_interval=get_config("RECAPTCHA_INTERVAL"),
-            recaptcha_max_retry=get_config("RECAPTCHA_MAX_RETRY"),
         )
     elif request.json:
+
+        class LoginStatusCode(Enum):
+            UsernameNull = 1
+            UsernamePasswordNotMatch = 2
+            BadRequest = 100
+            InternalError = 101
+
         try:
             name = request.json["username"].strip()
             password = request.json["password"]
             if not name:
-                return response(success=False, mes="请输入用户名")
+                return response(success=False, code=LoginStatusCode.UsernameNull)
             user = UserCredential.get_by_username(username=name)
             if not user:
-                return response(success=False, mes="用户不存在")
+                return response(
+                    success=False, code=LoginStatusCode.UsernamePasswordNotMatch
+                )
             if hash_password(password, user.salt) != user.password_hash:
-                return response(success=False, mes="用户名或密码错误")
+                return response(
+                    success=False, code=LoginStatusCode.UsernamePasswordNotMatch
+                )
             if login_user(user, remember=True):
                 return response(
                     success=True,
@@ -83,17 +92,16 @@ def login():
                     },
                 )
             else:
-                return response(success=False, mes="登录失败, 内部错误")
+                current_app.logger.error(
+                    "In login function, an user login failure occurred, USERNAME: %s, EMAIL: %s",
+                    user.username,
+                    user.email,
+                )
+                return response(success=False, code=LoginStatusCode.InternalError)
         except Exception as e:
-            print(e)
-            return response(success=False, mes="内部错误")
-    return response(success=False, mes="请求错误")
-
-
-@auth_bp.route("/logout", methods=["GET"])
-def logout():
-    logout_user()
-    return redirect(url_for("page_bp.index"))
+            current_app.logger.error("In login function, an error occurred: %s", e)
+            return response(success=False, code=LoginStatusCode.InternalError)
+    return response(success=False, code=LoginStatusCode.BadRequest)
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -104,27 +112,34 @@ def register():
             random_background=random_image(),
             mail_send_interval=get_config("MAIL_SEND_INTERVAL"),
             site_key=get_config("SITE_KEY"),
-            recaptcha_interval=get_config("RECAPTCHA_INTERVAL"),
-            recaptcha_max_retry=get_config("RECAPTCHA_MAX_RETRY"),
         )
+
+    class RegisterStatusCode(Enum):
+        EmailNotVerified = 1
+        UsernameNull = 2
+        UsernameOccupied = 3
+        EmailOccupied = 4
+        PasswordNull = 5
+        BadRequest = 100
+        InternalError = 101
 
     if request.json:
         try:
             email = session.get("valid_email")
             if not email:
-                return response(success=False, mes="请验证邮箱", code=1)
+                return response(success=False, code=RegisterStatusCode.EmailNotVerified)
 
             name = request.json["username"].strip()
             if not name:
-                return response(success=False, mes="请输入用户名", code=2)
+                return response(success=False, code=RegisterStatusCode.UsernameNull)
 
             if UserCredential.exists_username(name):
-                return response(success=False, mes="用户名已存在", code=3)
+                return response(success=False, code=RegisterStatusCode.UsernameOccupied)
             if UserCredential.exists_email(email):
-                return response(success=False, mes="邮箱已注册", code=5)
+                return response(success=False, code=RegisterStatusCode.EmailOccupied)
             password = request.json["password"]
             if not password:
-                return response(success=False, mes="请输入密码", code=4)
+                return response(success=False, code=RegisterStatusCode.PasswordNull)
 
             salt = secrets.token_bytes(64)
             password_hash = hash_password(password, salt)
@@ -133,20 +148,22 @@ def register():
 
         except Exception as e:
             current_app.logger.error(e)
-            return response(success=False, mes="请求错误", code=100)
-    return response(success=False, mes="请求错误", code=100)
+            return response(success=False, code=RegisterStatusCode.InternalError)
+    return response(success=False, code=RegisterStatusCode.BadRequest)
 
 
 @auth_bp.route("/register/validate", methods=["POST"])
 def validate():
+    class ValidateStatusCode(Enum):
+        TooFrequent = 1
+
     if request.json:
         if "email" in request.json.keys():
             timestamp = session.get("request_timestamp")
             if timestamp and timestamp + get_config("MAIL_SEND_INTERVAL") > time():
                 return response(
                     success=False,
-                    mes="请求过于频繁",
-                    code=1,
+                    code=ValidateStatusCode.TooFrequent,
                     data={"timestamp": timestamp},
                 )
 
@@ -208,12 +225,19 @@ def validate():
 
 @auth_bp.route("/register/recaptcha", methods=["POST"])
 def recaptcha():
+    class RecaptchaStatusCode(Enum):
+        NotPassed = 1
+        NotFinish = 2
+        TooFrequent = 3
+        BadRequest = 100
+        InternalError = 101
+
     if not request.json or "recaptcha" not in request.json:
-        return response(success=False, mes="请求错误", code=100)
+        return response(success=False, code=RecaptchaStatusCode.BadRequest)
 
     recaptcha_token = request.json["recaptcha"]
     if not recaptcha_token:
-        return response(success=False, mes="请完成验证", code=11)
+        return response(success=False, code=RecaptchaStatusCode.NotFinish)
 
     retry = session.get("recaptcha_retry_times", 0) + 1
     max_retry = get_config("RECAPTCHA_MAX_RETRY")
@@ -228,8 +252,8 @@ def recaptcha():
             if wait_time > 0:
                 return response(
                     success=False,
-                    mes=f"请等待{math.floor(wait_time)}秒后重试",
-                    code=2,
+                    code=RecaptchaStatusCode.TooFrequent,
+                    data={"time": math.ceil(wait_time)},
                 )
             else:
                 session.pop("recaptcha_timestamp")
@@ -238,8 +262,8 @@ def recaptcha():
             session["recaptcha_timestamp"] = current_time
             return response(
                 success=False,
-                mes=f"请等待{interval}秒后重试",
-                code=2,
+                code=RecaptchaStatusCode.TooFrequent,
+                data={"time": interval},
             )
     else:
         session["recaptcha_retry_times"] = retry
@@ -251,12 +275,19 @@ def recaptcha():
         )
         resp_json = resp.json()
     except Exception as e:
-        current_app.logger.error(e)
+        current_app.logger.error("In recaptcha function, an error occurred: %s", e)
+        return response(success=False, code=RecaptchaStatusCode.InternalError)
 
     if resp_json.get("success"):
-        return response(success=True, mes="验证成功")
+        return response(success=True)
     else:
-        return response(success=False, mes="验证失败", code=1)
+        return response(success=False, code=RecaptchaStatusCode.NotPassed)
+
+
+@auth_bp.route("/logout", methods=["GET"])
+def logout():
+    logout_user()
+    return redirect(url_for("page_bp.index"))
 
 
 # @auth_bp.route("/admin")

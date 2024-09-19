@@ -47,10 +47,11 @@ function init() {
         }).then(response => response.json());
         if (!data.success) {
             switch (data.code) {
-                case 11: showPasswordMessages("请完成recaptcha验证"); break;
-                case 100: showPasswordMessages("recaptcha验证错误"); break;
-                case 2: showPasswordMessages(data.mes); break;
                 case 1: showPasswordMessages("recaptcha验证未通过"); break;
+                case 2: showPasswordMessages("请完成recaptcha验证"); break;
+                case 3: showPasswordMessages(`recaptcha尝试次数过多，请等待${data.data.time}秒后重试`); break;
+                case 101: showPasswordMessages("内部错误，可能需要邮件联系开发者，邮箱地址见右下角"); break;
+                default: console.log(data); break;
             }
             return;
         }
@@ -70,7 +71,12 @@ function init() {
                 window.location = data.data.space;
             }
             else {
-                showPasswordMessages(data.message);
+                switch (data.code) {
+                    case 1: showPasswordMessages("请输入用户名"); break;
+                    case 2: showPasswordMessages("用户名或密码错误"); break;
+                    case 101: showPasswordMessages("内部错误，可能需要邮件联系开发者，邮箱地址见右下角"); break;
+                    default: console.log(data); break;
+                }
             }
         })
     });

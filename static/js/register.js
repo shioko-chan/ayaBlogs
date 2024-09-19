@@ -101,10 +101,10 @@ function init() {
             }).then(response => response.json());
             if (!data.success) {
                 switch (data.code) {
-                    case 11: showEmailMessages("请完成recaptcha验证"); break;
-                    case 100: showEmailMessages("recaptcha验证错误"); break;
-                    case 2: showEmailMessages(data.mes); break;
                     case 1: showEmailMessages("recaptcha验证未通过"); break;
+                    case 2: showEmailMessages("请完成recaptcha验证"); break;
+                    case 3: showEmailMessages(`recaptcha尝试次数过多，请等待${data.data.time}秒后重试`); break;
+                    default: console.log(data); break;
                 }
                 endCountDown(timer);
                 return;
@@ -240,21 +240,24 @@ function init() {
                         showEmailMessages("尚未验证邮箱");
                         break;
                     case 2:
-                        showUsernameMessages(data.message);
+                        showUsernameMessages("未输入用户名");
                         break;
                     case 3:
                         showUsernameMessages("用户名已被占用");
                         break;
                     case 4:
-                        showPasswordMessages(data.message);
-                        break;
-                    case 5:
                         registerForm.classList.add("hidden");
                         emailForm.classList.remove("hidden");
-                        showEmailMessages(data.message);
+                        showEmailMessages("邮箱地址已被注册");
+                        break;
+                    case 5:
+                        showPasswordMessages("未输入密码");
+                        break;
+                    case 101:
+                        showPasswordMessages("内部错误，可能需要邮件联系开发者，邮箱地址见右下角");
                         break;
                     default:
-                        console.log(data);
+                        console.log(data); break;
                 }
             }
         })

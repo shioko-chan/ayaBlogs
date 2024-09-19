@@ -28,8 +28,6 @@
   {% endblock %}
   <script>
     const gRecaptchaUrl = "{{ url_for('auth.recaptcha') }}"
-    const gRecaptchaInterval = "{{ recaptcha_interval }}"
-    const gRecaptchaMAXRetry = "{{ recaptcha_max_retry }}"
   </script>
   <script src="//recaptcha.net/recaptcha/api.js" async defer></script>
 </body>
