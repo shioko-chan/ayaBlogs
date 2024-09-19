@@ -1,0 +1,12 @@
+{% extends "page.html" %}
+
+{% block main %}
+<main class="flex-grow flex flex-col justify-center items-center text-white">
+  <div class="text-center">
+    <h1 class="text-4xl font-bold mb-4">404 - 页面未找到</h1>
+    <p class="text-lg mb-6">你查找的页面似乎不存在</p>
+    <p href="{{ url_for('page.index') }}" class=" text-white underline">返回主页</p>
+    <p href="{{ url_for('page.index') }}" class=" text-white underline">玩游戏</p>
+  </div>
+</main>
+{% endblock %}

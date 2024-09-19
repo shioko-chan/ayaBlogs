@@ -29,5 +29,5 @@
 <script>
   const loginUrl = "{{ url_for('auth.login') }}"
 </script>
-<script type="text/javascript" src="{{ url_for('static', filename='js/login.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', service='js', filename='login.js') }}"></script>
 {% endblock %}

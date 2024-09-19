@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+function init() {
     function showMessages(father, mes, success) {
 
         for (let span of father.querySelectorAll("div > span")) {
@@ -35,14 +35,17 @@ document.addEventListener("DOMContentLoaded", () => {
         showMessages(retypePasswordDiv, mes, success);
     }
 
+    function endCountDown(timer) {
+        codeButton.innerText = "获取验证码";
+        codeButton.classList.remove("bg-blue-300");
+        codeButton.classList.remove("cursor-not-allowed");
+        codeButton.classList.add("bg-blue-500");
+        clearInterval(timer);
+    }
     function setCountDown(cnt) {
         const timer = setInterval(() => {
             if (cnt <= 0) {
-                codeButton.innerText = "获取验证码";
-                codeButton.classList.remove("bg-blue-300");
-                codeButton.classList.remove("cursor-not-allowed");
-                codeButton.classList.add("bg-blue-500");
-                clearInterval(timer);
+                endCountDown(timer);
                 return;
             }
             codeButton.classList.add("bg-blue-300");
@@ -51,12 +54,13 @@ document.addEventListener("DOMContentLoaded", () => {
             codeButton.innerText = `${cnt} 秒`;
             cnt -= 1;
         }, 1000);
+        return timer;
     }
 
     let latestReqTime = 0;
-    let latestEmail = "";
+    let latestEmail = '';
     let isReceived = false;
-    let hasError = false;
+    let emailStatus = new Map();
     const codeButton = document.getElementById("code-get-button");
     const codeInput = document.getElementById("code");
     const emailInput = document.getElementById("email");
@@ -69,36 +73,44 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            if (hasError && latestEmail === emailInput.value) {
+            let emailToVerify = emailInput.value;
+            if (emailStatus.has(emailToVerify) && !emailStatus.get(emailToVerify)) {
                 return;
             }
 
-            if (grecaptcha && grecaptcha.getResponse()) {
-                const status = await fetch(gRecaptchaUrl, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        "recaptcha": grecaptcha.getResponse()
-                    })
-                }).then(response => response.json()).then(data => data.success);
-                if (!status) {
-                    showEmailMessages("recaptcha验证未通过");
-                    return;
-                }
+            if (new Date().getTime() - latestReqTime < mailSendInterval * 1000) {
+                return;
             }
-            else {
+
+            let gresponse = grecaptcha.getResponse();
+            if (!grecaptcha || !gresponse) {
                 showEmailMessages("请完成recaptcha验证");
                 return;
             }
 
-            const currentTime = new Date().getTime();
-            if (currentTime - latestReqTime < mailSendInterval * 1000) {
+            let timer = setCountDown(mailSendInterval + 10);
+
+            const data = await fetch(gRecaptchaUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "recaptcha": gresponse
+                })
+            }).then(response => response.json());
+            if (!data.success) {
+                switch (data.code) {
+                    case 11: showEmailMessages("请完成recaptcha验证"); break;
+                    case 100: showEmailMessages("recaptcha验证错误"); break;
+                    case 2: showEmailMessages(data.mes); break;
+                    case 1: showEmailMessages("recaptcha验证未通过"); break;
+                }
+                endCountDown(timer);
                 return;
             }
 
-            latestEmail = emailInput.value;
+            latestEmail = emailToVerify;
             fetch(emailValidateUrl, {
                 method: "POST",
                 headers: {
@@ -113,6 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     showEmailMessages("验证码已发送, 请查收", true);
                     latestReqTime = new Date().getTime();
                     isReceived = true;
+                    endCountDown(timer);
                     setCountDown(mailSendInterval);
                 } else {
                     switch (data.code) {
@@ -122,11 +135,11 @@ document.addEventListener("DOMContentLoaded", () => {
                             break;
                         case 2:
                             showEmailMessages("邮箱地址不可用");
-                            hasError = true;
+                            emailStatus.set(latestEmail, false);
                             break;
                         case 3:
                             showEmailMessages("邮箱地址已被注册");
-                            hasError = true;
+                            emailStatus.set(latestEmail, false);
                             break;
                         default:
                             console.log(data);
@@ -246,4 +259,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         })
     });
-})
+}
+
+if (document.readyState !== 'loading') {
+    init();
+} else {
+    document.addEventListener('DOMContentLoaded',
+        init,
+    )
+}

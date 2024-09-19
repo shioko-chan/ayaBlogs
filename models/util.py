@@ -1,12 +1,17 @@
 from flask import current_app
+from typing import Callable, Optional, TypeVar, List
+from dataclasses import fields, is_dataclass
 
 
-def transact(transact, params=None, have_return=True):
+def transact(transact: str, params=None, have_return=True):
     pool = current_app.extensions["pool"]
     return pool(transact, params, have_return)
 
 
-def unique(func):
+T = TypeVar("T")
+
+
+def unique(func: Callable[..., Optional[List[T]]]) -> Callable[..., Optional[T]]:
     def wrapper(*args, **kwargs):
         res = func(*args, **kwargs)
         return res[0] if res else None
@@ -34,3 +39,10 @@ def get_config(key, default=None):
 
 def get_extension(key, default=None):
     return current_app.extensions.get(key, default)
+
+
+def field_names(cls):
+    if is_dataclass(cls):
+        return [field.name for field in fields(cls)]
+    else:
+        raise ValueError("Not a dataclass")

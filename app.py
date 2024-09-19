@@ -221,8 +221,8 @@ def index():
     )
 
 
-@app.route("/mainpage/<username>")
-def mainpage(username):
+@app.route("/space/<username>")
+def space(username):
     user = session.get("user")
     if not (user is not None and user.uname == username):
         uid = query_database("select uid from usr where uname=%s", params=(username,))[
@@ -233,7 +233,7 @@ def mainpage(username):
     return render_template(
         "index.html",
         user=user,
-        mainpage_user=username,
+        space_user=username,
         is_authenticated=user is not None,
         articles=get_articles(
             condition="where author=%d",
@@ -403,7 +403,7 @@ def publish():
                     return redirect(request.referrer or url_for("index"))
 
     flash("提交成功！", "success")
-    return redirect(url_for("mainpage", username=user.uname) or url_for("index"))
+    return redirect(url_for("space", username=user.uname) or url_for("index"))
 
 
 @app.route("/article/<int:pid>")
@@ -418,7 +418,7 @@ def article(pid):
     )
 
 
-@app.route("/mainpage/<username>/management")
+@app.route("/space/<username>/management")
 def manage(username):
     user = session.get("user")
     if not user or user.uname != username:

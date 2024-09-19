@@ -1,85 +1,50 @@
-{% extends 'base.html' %}
+{% extends 'page.html' %}
 {% block head %}
 <script>
   const searchUrl = "{{ url_for('page.search') }}"
 </script>
 {% endblock %}
-{% block body %}
 
-<body class="h-screen flex flex-col justify-between items-stretch bg-gray-800">
-  <header class="bg-white shadow-lg border-b-2">
-    <div class="px-4 py-6 flex justify-between items-center w-full">
-      <a href="#" class="text-xl font-semibold text-gray-800 ml-10">AYABlogs</a>
-      {% if is_user_page %}
-      <div class="font-bold text-gray-800 text-2xl">{{ mainpage_user }}的个人空间</div>
-      {% endif %}
-      <div class="flex justify-between items-center mr-10">
-        <nav class="mr-6">
-          <ul class="flex space-x-4">
-            {% if is_authenticated %}
-            {% if user.uname == mainpage_user %}
-            <li>
-              <a href="{{ url_for('page.manage', username=user.uname) }}"
-                class="text-gray-600 hover:text-gray-800">管理后台</a>
-            </li>
-            {% else %}
-            <li>
-              <a href="{{ url_for('page.mainpage', username=user.uname) }}"
-                class="text-gray-600 hover:text-gray-800">前往个人主页</a>
-            </li>
-            {% endif %}
-            <li>
-              <a href="{{ url_for('auth.logout') }}" class="text-gray-600 hover:text-gray-800">退出登录</a>
-            </li>
-            {% else %}
-            <li>
-              <a href="{{ url_for('auth.login') }}" class="text-gray-600 hover:text-gray-800">登录</a>
-            </li>
-            {% endif %}
-          </ul>
-        </nav>
-        <div class="relative flex justify-between items-center">
-          {% if is_user_page %}
-          <form action="{{ url_for('page.search', username=mainpage_user) }}" method="post">
-            <input id="search-input" type="text" name="search" placeholder="搜索当前用户内容"
-              class="px-3 py-2 w-64 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <button type="submit" class="ml-4">
-              <image src="{{ url_for('static', filename='icon/search.png') }}" class="aspect-square w-5 self-center">
-              </image>
-            </button>
-          </form>
-          {% else %}
-          <input id="search-input" type="text" name="search" placeholder="全站查询，搜索博文、用户"
-            class="px-3 py-2 w-64 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          {% endif %}
-          <div id="search-results"
-            class="absolute z-10 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg top-full hidden"></div>
-        </div>
-      </div>
+{% block topbar %}
+{% if user.is_authenticated %}
+<li>
+  <a href="{{ url_for('page.space_index') }}" class="text-gray-600 hover:text-gray-800">前往个人主页</a>
+</li>
+<li>
+  <a href="{{ url_for('auth.logout') }}" class="text-gray-600 hover:text-gray-800">退出登录</a>
+</li>
+{% else %}
+<li>
+  <a href="{{ url_for('auth.login') }}" class="text-gray-600 hover:text-gray-800">登录</a>
+</li>
+{% endif %}
+{% endblock %}
+
+{% block searchform %}
+<input id="search-input" type="text" name="search" placeholder="全站查询，搜索用户、文章"
+  class="px-3 py-2 w-64 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+{% endblock %}
+
+{% block main %}
+<main class="flex-grow">
+  {% for passage in passages %}
+  <div class="bg-white p-6 border-b">
+    <h2 class="text-2xl font-semibold mb-2"><a href="#" class="hover:text-blue-700 hover:underline">{{ passage.title
+        }}</a></h2>
+    <p class="text-gray-700 mb-4">{{ passage.content[:100] }}</p>
+    <div class="flex space-x-4">
+      {% for image in passage.images[:3] %}
+      <img src="{{ image }}" alt="Article Image" class="w-1/3 h-auto object-cover rounded-lg" />
+      {% endfor %}
     </div>
-  </header>
-  <main class="flex-grow">
-    {% for article in articles %}
-    <div class="bg-white p-6 border-b">
-      <h2 class="text-2xl font-semibold mb-2"><a href="#" class="hover:text-blue-700 hover:underline">{{ article.title
-          }}</a></h2>
-      <p class="text-gray-700 mb-4">{{ article.content[:100] }}</p>
-      <div class="flex space-x-4">
-        {% for image in article.images[:3] %}
-        <img src="{{ image }}" alt="Article Image" class="w-1/3 h-auto object-cover rounded-lg" />
-        {% endfor %}
-      </div>
-    </div>
-    {% endfor %}
-  </main>
-  <footer class="bg-transparent text-white py-3">
-    <div class="w-full mx-auto px-4">
-      <div class="flex flex-col md:flex-row justify-between items-center">
-        <h5 class="text-lg font-semibold">AYABlogs</h5>
-        <p class="text-sm">Copyleft 2024 AYA Blogs. No rights reserved.</p>
-      </div>
-    </div>
-  </footer>
-  <script type="text/javascript" src="{{ url_for('static', filename='js/search.js') }}"></script>
-</body>
+  </div>
+  {% endfor %}
+</main>
+{% endblock %}
+
+{% block script %}
+<script type="module">
+  import { search } from "{{ url_for('static', service='js', filename='search.js') }}"
+  search("all", "{{ url_for('page.search') }}");
+</script>
 {% endblock %}

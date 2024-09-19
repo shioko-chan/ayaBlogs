@@ -26,7 +26,7 @@
 <form action="#" method="POST" id="register-form" class="hidden">
   <div class="mb-4" id="username-div">
     <label for="username" class="block text-sm font-medium text-gray-700"><span class="font-semibold">用户名</span></label>
-    <input id="username" type="text" name="username" maxlength="30"
+    <input id="username" type="text" name="username" maxlength="20"
       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
       required />
   </div>
@@ -55,5 +55,5 @@
   const mailSendInterval = '{{ mail_send_interval }}'
   const loginUrl = "{{ url_for('auth.login') }}"
 </script>
-<script type="text/javascript" src="{{ url_for('static', filename='js/register.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', service='js',filename='register.js') }}"></script>
 {% endblock %}

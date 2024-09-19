@@ -4,12 +4,6 @@ import pymssql
 
 class ConnectionPool:
     def __init__(self, app):
-        print(
-            app.config["DB_SERVER"],
-            app.config["DB_USER"],
-            app.config["DB_PASSWORD"],
-            app.config["DB_NAME"],
-        )
         self.pool = PooledDB(
             creator=pymssql,
             mincached=2,

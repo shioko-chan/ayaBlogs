@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+function init() {
     function showMessages(father, mes, success) {
         for (let span of father.querySelectorAll("div > span")) {
             span.remove();
@@ -25,28 +25,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
+
         if (!usernameInput.checkValidity()) {
             showUsernameMessages("用户名字符不合法");
             return;
         }
 
-        if (grecaptcha && grecaptcha.getResponse()) {
-            const status = await fetch(gRecaptchaUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    "recaptcha": grecaptcha.getResponse()
-                })
-            }).then(response => response.json()).then(data => data.success);
-            if (!status) {
-                showPasswordMessages("recaptcha验证未通过");
-                return;
-            }
-        }
-        else {
+        let gresponse = grecaptcha.getResponse();
+        if (!grecaptcha || !gresponse) {
             showPasswordMessages("请完成recaptcha验证");
+            return;
+        }
+        const data = await fetch(gRecaptchaUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "recaptcha": gresponse
+            })
+        }).then(response => response.json());
+        if (!data.success) {
+            switch (data.code) {
+                case 11: showPasswordMessages("请完成recaptcha验证"); break;
+                case 100: showPasswordMessages("recaptcha验证错误"); break;
+                case 2: showPasswordMessages(data.mes); break;
+                case 1: showPasswordMessages("recaptcha验证未通过"); break;
+            }
             return;
         }
 
@@ -62,11 +67,18 @@ document.addEventListener('DOMContentLoaded', () => {
             })
         }).then(response => response.json()).then(data => {
             if (data.success) {
-                window.location = data.data.mainpage;
+                window.location = data.data.space;
             }
             else {
                 showPasswordMessages(data.message);
             }
         })
     });
-})
+}
+if (document.readyState !== 'loading') {
+    init();
+} else {
+    document.addEventListener('DOMContentLoaded',
+        init,
+    )
+}

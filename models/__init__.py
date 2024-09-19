@@ -1,7 +1,11 @@
 from .DataModels import (
-    Usr,
+    UserCredential,
+    UserProfile,
     Passage,
     Comment,
+    Image,
+    Avatar,
+    User,
 )
 
 from .Database import ConnectionPool

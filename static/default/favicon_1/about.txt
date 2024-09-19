@@ -1,0 +1,6 @@
+This favicon was generated using the following font:
+
+- Font Title: SUSE
+- Font Author: Copyright 2024 The SUSE Project Authors (https://github.com/SUSE/suse-font)
+- Font Source: https://fonts.gstatic.com/s/suse/v1/MwQsbhb078Wt81NpzELmC2QqjbGG7lq9ZnJSZtQG.ttf
+- Font License: SIL Open Font License, 1.1 (http://scripts.sil.org/OFL))

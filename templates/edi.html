@@ -1,27 +1,27 @@
 {% extends 'page.html' %}
 
 {% block head %}
-  <link rel="stylesheet" href="https://unpkg.com/vditor/dist/index.css" />
-  <script src="https://unpkg.com/vditor/dist/index.min.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', service='es_module', filename='vditor/dist/index.css') }}" />
+<script src="{{ url_for('static', service=" es_module",filename='vditor/dist/index.min.js' ) }}"></script>
 {% endblock %}
 
 {% block main %}
-  <main class="grow">
-    <div id="vditor"></div>
-  </main>
+<main class="grow">
+  <div id="vditor"></div>
+</main>
 {% endblock %}
 {% block script %}
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      new Vditor('vditor', {
-        height: '100%',
-        width: '100%',
-        cache: {
-          enable: false
-        },
-        undoDelay: 100,
-        value: 'Markdown 配置'
-      })
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    new Vditor('vditor', {
+      height: '100%',
+      width: '100%',
+      cache: {
+        enable: false
+      },
+      undoDelay: 100,
+      value: 'Markdown 配置'
     })
-  </script>
+  })
+</script>
 {% endblock %}

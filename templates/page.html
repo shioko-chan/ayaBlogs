@@ -1,36 +1,57 @@
 {% extends 'base.html' %}
 {% block head %}
-  {#
-<script>
-  const searchUrl = "{{ url_for('page.search') }}"
-</script> #}
+<link rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown-light.min.css" />
+<style>
+  .passage * {
+    border: none !important;
+  }
+</style>
 {% endblock %}
 
 {% block body %}
-  <body class="h-screen flex flex-col justify-between items-stretch bg-gray-800">
-    <header class="bg-white shadow-lg border-b-2">
-      <div class="px-4 py-6 flex justify-between items-center w-full">
-        <a href="#" class="text-xl font-semibold text-gray-800 ml-10">AYABlogs</a>
-        <div class="flex justify-between items-center mr-10">
-          <div class="relative flex justify-between items-center">
-            <div id="search-results" class="absolute z-10 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg top-full hidden"></div>
-          </div>
+
+<body class="h-screen flex flex-col justify-between items-stretch bg-gray-800">
+  {% block toast %}
+
+  {% endblock %}
+
+  <header class="bg-white shadow-lg border-b-2">
+    <div class="px-4 py-6 flex justify-between items-center w-full">
+      <a href="#" class="text-xl font-semibold text-gray-800 ml-10">AYABlogs</a>
+      <div class="flex justify-between items-center mr-10">
+        <nav class="mr-6">
+          <ul class="flex space-x-4">
+            {% block topbar %}
+
+            {% endblock %}
+          </ul>
+        </nav>
+        <div class="relative flex justify-between items-center">
+          {% block searchform %}
+
+          {% endblock %}
+          <div id="search-results"
+            class="absolute z-10 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg top-full hidden"></div>
         </div>
       </div>
-    </header>
-    {% block main %}
+    </div>
+  </header>
 
-    {% endblock %}
-    <footer class="bg-transparent text-white py-3">
-      <div class="w-full mx-auto px-4">
-        <div class="flex flex-col md:flex-row justify-between items-center">
-          <h5 class="text-lg font-semibold">AYABlogs</h5>
-          <p class="text-sm">Copyleft 2024 AYA Blogs. No rights reserved.</p>
-        </div>
+  {% block main %}
+
+  {% endblock %}
+  <footer class="bg-transparent text-white py-3">
+    <div class="w-full mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <h5 class="text-lg font-semibold">AYABlogs</h5>
+        <p class="text-sm">Copyleft 2024 AYABlogs. No rights reserved.</p>
+        <p class="text-sm">Contact: mementototomori@gmail.com</p>
       </div>
-    </footer>
-    {% block script %}
+    </div>
+  </footer>
+  {% block script %}
 
-    {% endblock %}
-  </body>
+  {% endblock %}
+</body>
 {% endblock %}
