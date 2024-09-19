@@ -39,7 +39,7 @@ create table userprofile
 )
 
 
-create table passage_img
+create table passageimg
 (
     uuid uniqueidentifier primary key,
     create_at datetime default getdate(),
@@ -55,14 +55,14 @@ create table passage
     author_id bigint foreign key references usercredential(id) on delete cascade,
 )
 
-create table passage_img_map
+create table passageimgmap
 (
     id bigint foreign key references passage(id),
-    uuid uniqueidentifier foreign key references passage_img(uuid),
+    uuid uniqueidentifier foreign key references passageimg(uuid),
     primary key (id, uuid)
 )
 
-create table diary_img
+create table diaryimg
 (
     uuid uniqueidentifier primary key,
     create_at datetime default getdate(),
@@ -76,10 +76,10 @@ create table diary
     author_id bigint foreign key references usercredential(id) on delete cascade,
 )
 
-create table diary_img_map
+create table diaryimgmap
 (
     id bigint foreign key references diary(id),
-    uuid uniqueidentifier foreign key references diary_img(uuid),
+    uuid uniqueidentifier foreign key references diaryimg(uuid),
     primary key (id, uuid)
 )
 
@@ -93,13 +93,13 @@ create table comment
 )
 
 
-create table avatar_deleted
+create table avatardeleted
 (
     uuid uniqueidentifier primary key,
     create_at datetime,
 )
 
-create table usercredential_deleted
+create table usercredentialdeleted
 (
     id bigint primary key,
     password_hash varbinary(64),
@@ -109,7 +109,7 @@ create table usercredential_deleted
     is_administrator bit,
 )
 
-create table userprofile_deleted
+create table userprofiledeleted
 (
     id bigint primary key,
     birthday date,
@@ -118,36 +118,36 @@ create table userprofile_deleted
     create_at datetime,
 )
 
-create table passage_img_deleted
+create table passageimgdeleted
 (
     uuid uniqueidentifier primary key,
     create_at datetime,
 )
 
-create table passage_deleted
+create table passagedeleted
 (
     id bigint primary key,
     heat bigint,
     content nvarchar(max),
     create_at datetime,
-    is_draft bit,
+    isDraft bit,
     author_id bigint,
 )
 
-create table passage_img_map_deleted
+create table passageimgmapdeleted
 (
     id bigint,
     uuid uniqueidentifier,
     primary key (id, uuid)
 )
 
-create table diary_img_deleted
+create table diaryimgdeleted
 (
     uuid uniqueidentifier primary key,
     create_at datetime,
 )
 
-create table diary_deleted
+create table diarydeleted
 (
     id bigint primary key,
     content nvarchar(max),
@@ -155,14 +155,14 @@ create table diary_deleted
     author_id bigint,
 )
 
-create table diary_img_map_deleted
+create table diaryimgmapdeleted
 (
     id bigint,
     uuid uniqueidentifier,
     primary key (id, uuid)
 )
 
-create table comment_deleted
+create table commentdeleted
 (
     id bigint primary key,
     content nvarchar(500),
@@ -201,7 +201,7 @@ as
 begin
     declare @sql nvarchar(max);
     declare @deleted_table_name nvarchar(max);
-    set @deleted_table_name = @table_name + '_deleted';
+    set @deleted_table_name = @table_name + 'deleted';
     set @sql = 'create trigger trigger_after_delete_'
     + @table_name + ' on ' + @table_name + ' after delete
         as
@@ -216,10 +216,10 @@ go
 exec create_delete_trigger 'avatar';
 exec create_delete_trigger 'usercredential';
 exec create_delete_trigger 'userprofile';
-exec create_delete_trigger 'passage_img';
+exec create_delete_trigger 'passageimg';
 exec create_delete_trigger 'passage';
-exec create_delete_trigger 'passage_img_map';
-exec create_delete_trigger 'diary_img';
+exec create_delete_trigger 'passageimgmap';
+exec create_delete_trigger 'diaryimg';
 exec create_delete_trigger 'diary';
-exec create_delete_trigger 'diary_img_map';
+exec create_delete_trigger 'diaryimgmap';
 exec create_delete_trigger 'comment';
