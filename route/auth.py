@@ -56,6 +56,12 @@ def hash_password(password, salt):
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+    class LoginStatusCode(Enum):
+        UsernameNull = 1
+        UsernamePasswordNotMatch = 2
+        BadRequest = 100
+        InternalError = 101
+
     if request.method == "GET":
         return render_template(
             "login.html",
@@ -63,12 +69,6 @@ def login():
             site_key=get_config("SITE_KEY"),
         )
     elif request.json:
-
-        class LoginStatusCode(Enum):
-            UsernameNull = 1
-            UsernamePasswordNotMatch = 2
-            BadRequest = 100
-            InternalError = 101
 
         try:
             name = request.json["username"].strip()
@@ -106,14 +106,6 @@ def login():
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
-    if request.method == "GET":
-        return render_template(
-            "register.html",
-            random_background=random_image(),
-            mail_send_interval=get_config("MAIL_SEND_INTERVAL"),
-            site_key=get_config("SITE_KEY"),
-        )
-
     class RegisterStatusCode(Enum):
         EmailNotVerified = 1
         UsernameNull = 2
@@ -122,6 +114,14 @@ def register():
         PasswordNull = 5
         BadRequest = 100
         InternalError = 101
+
+    if request.method == "GET":
+        return render_template(
+            "register.html",
+            random_background=random_image(),
+            mail_send_interval=get_config("MAIL_SEND_INTERVAL"),
+            site_key=get_config("SITE_KEY"),
+        )
 
     if request.json:
         try:
@@ -156,6 +156,13 @@ def register():
 def validate():
     class ValidateStatusCode(Enum):
         TooFrequent = 1
+        Unavailable = 2
+        Occupied = 3
+        CodeExpiredOrNotRequest = 4
+        RetryTooFrequent = 5
+        WrongCode = 6
+        BadRequest = 100
+        InternalError = 101
 
     if request.json:
         if "email" in request.json.keys():
@@ -170,11 +177,12 @@ def validate():
             email = request.json["email"]
             email_former = session.get("email")
             if not email_former or email_former != email:
-                session["email"] = email
                 if not check_email_service(email):
-                    return response(success=False, mes="邮箱地址不可用", code=2)
+                    return response(success=False, code=ValidateStatusCode.Unavailable)
+                session["email"] = email
+
             if UserCredential.exists_email(email):
-                return response(success=False, mes="邮箱已经注册", code=3)
+                return response(success=False, code=ValidateStatusCode.Occupied)
 
             validateCode = randint(100000, 999999)
             message = Message(
@@ -186,18 +194,24 @@ def validate():
             try:
                 get_extension("mail").send(message)
             except Exception as e:
-                current_app.logger.error(e)
+                current_app.logger.error(
+                    "In validate function, while sending mail to address: %s, an error occurred",
+                    email,
+                    e,
+                )
                 session.pop("email")
-                return response(success=False, mes="请求错误", code=100)
+                return response(success=False, code=ValidateStatusCode.InternalError)
             session["validate_code"] = str(validateCode)
             session["retry_times"] = 0
             session["request_timestamp"] = time()
-            return response(success=True, mes="验证码发送成功")
+            return response(success=True)
 
         elif "validate_code" in request.json.keys():
             validate_code = session.get("validate_code")
             if not validate_code:
-                return response(success=False, mes="验证码已过期或尚未获取", code=11)
+                return response(
+                    success=False, code=ValidateStatusCode.CodeExpiredOrNotRequest
+                )
 
             input_code = request.json["validate_code"].strip()
             if validate_code != input_code:
@@ -206,11 +220,12 @@ def validate():
                     session.pop("retry_times")
                     session.pop("validate_code")
                     session.pop("email")
-                    return response(success=False, mes="验证码错误次数过多", code=12)
+                    return response(
+                        success=False, code=ValidateStatusCode.RetryTooFrequent
+                    )
                 return response(
                     success=False,
-                    mes="验证码错误",
-                    code=13,
+                    code=ValidateStatusCode.WrongCode,
                     data={
                         "opportunity": get_config("CODE_MAX_RETRY")
                         - session["retry_times"]
@@ -219,8 +234,8 @@ def validate():
             session.pop("retry_times")
             session.pop("validate_code")
             session["valid_email"] = session["email"]
-            return response(success=True, mes="验证码正确")
-    return response(success=False, mes="请求错误", code=100)
+            return response(success=True)
+    return response(success=False, code=ValidateStatusCode.BadRequest)
 
 
 @auth_bp.route("/register/recaptcha", methods=["POST"])
