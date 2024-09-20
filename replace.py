@@ -22,7 +22,7 @@ for path in paths:
             ref = content
             for _, text, _ in re.findall(
                 r"(['\"])(.*?)(\1)",
-                f.read(),
+                ref,
             ):
                 if text in dic.values():
                     content = content.replace(text, get_first_key(text))
