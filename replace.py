@@ -19,13 +19,12 @@ for path in paths:
     for file in Path(path).glob("*"):
         with open(file, "r") as f:
             content = f.read()
+            ref = content
             for _, text, _ in re.findall(
-                r"([`'\"])(.*?)(\1)",
+                r"(['\"])(.*?)(\1)",
                 f.read(),
             ):
-                print(text)
                 if text in dic.values():
-                    print(text)
                     content = content.replace(text, get_first_key(text))
         with open(file, "w") as f:
             f.write(content)

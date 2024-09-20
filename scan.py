@@ -10,7 +10,7 @@ def get_character():
         for file in Path(path).glob("*"):
             with open(file, "r") as f:
                 for item in re.findall(
-                    r"([`'\"])(.*?)(\1)",
+                    r"(['\"])(.*?)(\1)",
                     f.read(),
                 ):
                     if re.search(r"[\u4e00-\u9fff]", item[1]):
