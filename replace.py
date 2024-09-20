@@ -4,7 +4,7 @@ import json
 
 paths = ["./templates", "./static/js"]
 
-with open("./static/locales/zh/text.json", "r") as r:
+with open("./static/locales/zh-CN.json", "r") as r:
     dic = json.load(r)
     print(dic)
 
