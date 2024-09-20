@@ -23,8 +23,9 @@ for path in paths:
                 r"([`'\"])(.*?)(\1)",
                 f.read(),
             ):
+                print(text)
                 if text in dic.values():
+                    print(text)
                     content = content.replace(text, get_first_key(text))
-            print(dic.values())
         with open(file, "w") as f:
             f.write(content)
