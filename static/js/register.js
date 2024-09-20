@@ -51,7 +51,7 @@ function init() {
             codeButton.classList.add("bg-blue-300");
             codeButton.classList.add("cursor-not-allowed");
             codeButton.classList.remove("bg-blue-500");
-            codeButton.innerText = `${cnt} 秒`;
+            codeButton.innerText = "# 秒".replace("#", cnt);
             cnt -= 1;
         }, 1000);
         return timer;
@@ -103,7 +103,7 @@ function init() {
                 switch (data.code) {
                     case 1: showEmailMessages("recaptcha验证未通过"); break;
                     case 2: showEmailMessages("请完成recaptcha验证"); break;
-                    case 3: showEmailMessages(`recaptcha尝试次数过多，请等待${data.data.time}秒后重试`); break;
+                    case 3: showEmailMessages("recaptcha尝试次数过多，请等待#秒后重试".replace("#", data.data.time)); break;
                     case 101: showEmailMessages("内部错误，可能需要邮件联系开发者，邮箱地址见右下角"); break;
                     default: console.log(data); break;
                 }

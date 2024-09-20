@@ -25,5 +25,6 @@ for path in paths:
             ):
                 if text in dic.values():
                     content = content.replace(text, get_first_key(text))
+            print(dic.values())
         with open(file, "w") as f:
             f.write(content)
