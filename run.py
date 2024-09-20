@@ -1,6 +1,6 @@
 from pathlib import Path
 from passlib import pwd
-from flask import Flask, render_template, abort, send_from_directory
+from flask import Flask, render_template, abort, send_from_directory, request
 from flask_cors import CORS
 from flask_login import (
     LoginManager,
@@ -118,6 +118,11 @@ if __name__ == "__main__":
     @login_manager.user_loader
     def load_user(user_id):
         return User.get_by_id(user_id)
+
+    @app.context_processor
+    def lang():
+        user_language = request.accept_languages.best_match(["en", "zh"]) or "en"
+        return {"lang": user_language}
 
     CORS(app)
 

@@ -1,13 +1,12 @@
 {
     "devDependencies": {
-        "i18next-scanner": "^4.5.0",
         "postcss-import": "^16.1.0",
         "tailwindcss": "^3.4.4"
     },
     "name": "ayablogs",
     "version": "1.0.0",
     "main": "index.js",
-    "type": "module",
+    "type": "commonjs",
     "dependencies": {
         "@tailwindcss/typography": "^0.5.15",
         "ansi-regex": "^6.0.1",
@@ -113,8 +112,5 @@
     "bugs": {
         "url": "https://github.com/shiori-unconscious/ayaBlogs/issues"
     },
-    "homepage": "https://github.com/shiori-unconscious/ayaBlogs#readme",
-    "scripts": {
-        "i18n:scan": "i18next-scanner"
-    }
+    "homepage": "https://github.com/shiori-unconscious/ayaBlogs#readme"
 }

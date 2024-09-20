@@ -49,7 +49,7 @@ function init() {
             switch (data.code) {
                 case 1: showPasswordMessages("recaptcha验证未通过"); break;
                 case 2: showPasswordMessages("请完成recaptcha验证"); break;
-                case 3: showPasswordMessages(`recaptcha尝试次数过多，请等待${data.data.time}秒后重试`); break;
+                case 3: showPasswordMessages("recaptcha尝试次数过多，请等待#秒后重试".replace("#", data.data.time)); break;
                 case 101: showPasswordMessages("内部错误，可能需要邮件联系开发者，邮箱地址见右下角"); break;
                 default: console.log(data); break;
             }
