@@ -20,11 +20,14 @@ for path in paths:
         with open(file, "r") as f:
             content = f.read()
             ref = content
-            for _, text, _ in re.findall(
+            for quote, text, _ in re.findall(
                 r"(['\"])(.*?)(\1)",
                 ref,
             ):
                 if text in dic.values():
-                    content = content.replace(text, get_first_key(text))
+                    content = content.replace(
+                        f"{quote}{text}{quote}",
+                        f"window.translate({quote}{get_first_key(text)}{quote})",
+                    )
         with open(file, "w") as f:
             f.write(content)
