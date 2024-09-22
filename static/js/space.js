@@ -60,6 +60,16 @@ function convertMD2HTML() {
     })
 }
 
+function moveCaretToEnd(el) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    el.focus();
+}
+
 function addSignEditListener() {
     let inputBox = document.getElementById('sign-input-box');
     let inputButton = document.getElementById('sign-input-button');
@@ -67,6 +77,13 @@ function addSignEditListener() {
         inputBox.contentEditable = true;
         inputBox.focus();
         inputBox.classList.add('bg-gray-500');
+    });
+    inputBox.addEventListener('input', () => {
+        let content = inputBox.innerText;
+        if (content.length > 100) {
+            inputBox.innerText = content.slice(0, 100);
+            moveCaretToEnd(inputBox);
+        }
     });
     inputBox.addEventListener('blur', () => {
         inputBox.contentEditable = false;

@@ -126,7 +126,7 @@ function init() {
                     showEmailMessages("验证码已发送, 请查收", true);
                     latestReqTime = new Date().getTime();
                     isReceived = true;
-                    endCountDown(timer);
+                    clearInterval(timer);
                     setCountDown(mailSendInterval);
                 } else {
                     switch (data.code) {

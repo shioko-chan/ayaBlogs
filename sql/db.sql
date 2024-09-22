@@ -12,7 +12,7 @@ go
 use ayablogs
 begin transaction
 
-create table avatar
+create table img
 (
     uuid uniqueidentifier primary key,
     create_at datetime default getdate(),
@@ -24,7 +24,7 @@ create table usercredential
     password_hash varbinary(64) not null,
     salt varbinary(64) not null,
     username nvarchar(20) not null unique,
-    email nvarchar(50) not null unique,
+    email nvarchar(100) not null unique,
     is_administrator bit default 0 not null,
 )
 
@@ -32,40 +32,20 @@ create table userprofile
 (
     id bigint primary key,
     birthday date check(birthday >= '1900-01-01'),
-    avatar uniqueidentifier foreign key references avatar(uuid),
-    intro nvarchar(2000),
+    avatar uniqueidentifier foreign key references img(uuid),
+    intro nvarchar(250),
     create_at datetime default getdate(),
     foreign key (id) references usercredential(id) on delete cascade,
-)
-
-
-create table passageimg
-(
-    uuid uniqueidentifier primary key,
-    create_at datetime default getdate(),
 )
 
 create table passage
 (
     id bigint primary key identity(0, 1),
-    heat bigint default 0 not null,
+    vote_up bigint default 0 not null,
     content nvarchar(max) not null,
     create_at datetime default getdate(),
     is_draft bit default 1 not null,
     author_id bigint foreign key references usercredential(id) on delete cascade,
-)
-
-create table passageimgmap
-(
-    id bigint foreign key references passage(id),
-    uuid uniqueidentifier foreign key references passageimg(uuid),
-    primary key (id, uuid)
-)
-
-create table diaryimg
-(
-    uuid uniqueidentifier primary key,
-    create_at datetime default getdate(),
 )
 
 create table diary
@@ -76,11 +56,13 @@ create table diary
     author_id bigint foreign key references usercredential(id) on delete cascade,
 )
 
-create table diaryimgmap
+create table question
 (
-    id bigint foreign key references diary(id),
-    uuid uniqueidentifier foreign key references diaryimg(uuid),
-    primary key (id, uuid)
+    id bigint primary key identity(0, 1),
+    vote_up bigint default 0 not null,
+    content nvarchar(max) not null,
+    create_at datetime default getdate(),
+    author_id bigint foreign key references usercredential(id) on delete cascade,
 )
 
 create table comment
@@ -92,83 +74,148 @@ create table comment
     contain_by bigint foreign key references passage(id) on delete cascade,
 )
 
-
-create table avatardeleted
+create table answer
 (
-    uuid uniqueidentifier primary key,
-    create_at datetime,
+    id bigint primary key identity(0, 1),
+    content nvarchar(max) not null,
+    create_at datetime default getdate(),
+    author_id bigint foreign key references usercredential(id),
+    contain_by bigint foreign key references question(id) on delete cascade,
 )
 
-create table usercredentialdeleted
+create table passage_img
 (
-    id bigint primary key,
+    id bigint foreign key references passage(id),
+    uuid uniqueidentifier foreign key references img(uuid),
+    primary key (id, uuid),
+)
+
+create table diary_img
+(
+    id bigint foreign key references diary(id),
+    uuid uniqueidentifier foreign key references img(uuid),
+    primary key (id, uuid),
+)
+
+create table question_img
+(
+    id bigint foreign key references question(id),
+    uuid uniqueidentifier foreign key references img(uuid),
+    primary key (id, uuid),
+)
+
+create table comment_img
+(
+    id bigint foreign key references comment(id),
+    uuid uniqueidentifier foreign key references img(uuid),
+    primary key (id, uuid),
+)
+
+create table answer_img
+(
+    id bigint foreign key references answer(id),
+    uuid uniqueidentifier foreign key references img(uuid),
+    primary key (id, uuid),
+)
+
+create table img_deleted
+(
+    uuid uniqueidentifier,
+    create_at datetime default getdate(),
+)
+
+create table usercredential_deleted
+(
+    id bigint,
     password_hash varbinary(64),
     salt varbinary(64),
     username nvarchar(20),
-    email nvarchar(50),
+    email nvarchar(100),
     is_administrator bit,
 )
 
-create table userprofiledeleted
+create table userprofile_deleted
 (
-    id bigint primary key,
+    id bigint,
     birthday date,
     avatar uniqueidentifier,
-    intro nvarchar(2000),
+    intro nvarchar(250),
     create_at datetime,
 )
 
-create table passageimgdeleted
+create table passage_deleted
 (
-    uuid uniqueidentifier primary key,
-    create_at datetime,
-)
-
-create table passagedeleted
-(
-    id bigint primary key,
-    heat bigint,
+    id bigint,
+    vote_up bigint,
     content nvarchar(max),
     create_at datetime,
-    isDraft bit,
+    is_draft bit,
     author_id bigint,
 )
 
-create table passageimgmapdeleted
+create table diary_deleted
 (
     id bigint,
-    uuid uniqueidentifier,
-    primary key (id, uuid)
-)
-
-create table diaryimgdeleted
-(
-    uuid uniqueidentifier primary key,
-    create_at datetime,
-)
-
-create table diarydeleted
-(
-    id bigint primary key,
     content nvarchar(max),
     create_at datetime,
     author_id bigint,
 )
 
-create table diaryimgmapdeleted
+create table question_deleted
 (
     id bigint,
-    uuid uniqueidentifier,
-    primary key (id, uuid)
+    vote_up bigint,
+    content nvarchar(max),
+    create_at datetime,
+    author_id bigint,
 )
 
-create table commentdeleted
+create table comment_deleted
 (
-    id bigint primary key,
+    id bigint,
     content nvarchar(500),
     create_at datetime,
     author_id bigint,
     contain_by bigint,
+)
+
+create table answer_deleted
+(
+    id bigint,
+    content nvarchar(max),
+    create_at datetime,
+    author_id bigint,
+    contain_by bigint,
+)
+
+create table passage_img_deleted
+(
+    id bigint,
+    uuid uniqueidentifier,
+)
+
+create table diary_img_deleted
+(
+    id bigint,
+    uuid uniqueidentifier,
+)
+
+create table question_img_deleted
+(
+    id bigint foreign key references question(id),
+    uuid uniqueidentifier foreign key references img(uuid),
+)
+
+create table comment_img_deleted
+(
+    id bigint foreign key references comment(id),
+    uuid uniqueidentifier foreign key references img(uuid),
+)
+
+create table answer_img_deleted
+(
+    id bigint foreign key references answer(id),
+    uuid uniqueidentifier foreign key references img(uuid),
 )
 
 if not exists(select *

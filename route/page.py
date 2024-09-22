@@ -34,7 +34,7 @@ def rest():
 
 @page_bp.route("/editor", methods=["GET"])
 def editor():
-    return render_template("edi.html")
+    return render_template("editor.html")
 
 
 @page_bp.route("/", methods=["GET"])
@@ -74,7 +74,7 @@ def space_index():
     if current_user.is_authenticated:
         return redirect(url_for("page.space", uid=current_user.id))
     else:
-        return redirect(url_for("page.login"))
+        return redirect(url_for("auth.login"))
 
 
 @page_bp.route("/space/<int:uid>", methods=["GET"])
@@ -83,19 +83,21 @@ def space(uid):
         is_draft = request.args.get("query") == "draft"
         user = current_user
         is_current_user = True
+        avatar = get_avatar(current_user.avatar)
     else:
         is_draft = False
         user = User.get_by_id(uid)
         if user is None:
             abort(404)
+        avatar = get_avatar(user.avatar)
         is_current_user = False
 
     return render_template(
         "space.html",
-        user=current_user,
+        user=user,
         passages=Passage.retrieve_passages_by_author_id(user.id, is_draft=is_draft),
         random_background=random_image(),
-        avatar=get_avatar(current_user.avatar),
+        avatar=avatar,
         is_draft=is_draft,
         is_current_user=is_current_user,
     )
@@ -110,9 +112,8 @@ def passage(pid):
 @login_required
 def edit_user_profile(uid):
     if uid == current_user.id and request.json:
-        print(request.json)
-        current_user
-        User.update_intro()
+        intro = request.json["sign"]
+        User.update_intro(intro, uid)
         return response(success=True)
     abort(404)
 

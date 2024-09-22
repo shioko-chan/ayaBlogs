@@ -5,7 +5,7 @@
   <div class="mb-4" id="email-div">
     <label for="email" class="block text-sm font-medium text-gray-700"><span class="font-semibold">邮箱</span></label>
     <div class="flex flex-row w-full justify-between items-center">
-      <input id="email" type="email" name="email"
+      <input id="email" type="email" name="email" maxlength="100"
         class="w-full mt-1 block px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
         required />
       <button type="button" id="code-get-button"
@@ -52,7 +52,7 @@
 <script>
   const emailValidateUrl = "{{ url_for('auth.validate') }}"
   const registerUrl = "{{ url_for('auth.register') }}"
-  const mailSendInterval = '{{ mail_send_interval }}'
+  const mailSendInterval = {{ mail_send_interval }}
   const loginUrl = "{{ url_for('auth.login') }}"
 </script>
 <script type="text/javascript" src="{{ url_for('static', service='js',filename='register.js') }}"></script>

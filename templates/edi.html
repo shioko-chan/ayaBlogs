@@ -1,8 +1,7 @@
 {% extends 'page.html' %}
 
 {% block head %}
-<link rel="stylesheet" href="{{ url_for('static', service='es_module', filename='vditor/dist/index.css') }}" />
-<script src="{{ url_for('static', service=" es_module",filename='vditor/dist/index.min.js' ) }}"></script>
+
 {% endblock %}
 
 {% block main %}
@@ -11,7 +10,7 @@
 </main>
 {% endblock %}
 {% block script %}
-<script>
+<script>z
   document.addEventListener('DOMContentLoaded', () => {
     new Vditor('vditor', {
       height: '100%',

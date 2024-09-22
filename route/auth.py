@@ -74,15 +74,15 @@ def login():
             name = request.json["username"].strip()
             password = request.json["password"]
             if not name:
-                return response(success=False, code=LoginStatusCode.UsernameNull)
+                return response(success=False, code=LoginStatusCode.UsernameNull.value)
             user = UserCredential.get_by_username(username=name)
             if not user:
                 return response(
-                    success=False, code=LoginStatusCode.UsernamePasswordNotMatch
+                    success=False, code=LoginStatusCode.UsernamePasswordNotMatch.value
                 )
             if hash_password(password, user.salt) != user.password_hash:
                 return response(
-                    success=False, code=LoginStatusCode.UsernamePasswordNotMatch
+                    success=False, code=LoginStatusCode.UsernamePasswordNotMatch.value
                 )
             if login_user(user, remember=True):
                 return response(
@@ -97,11 +97,11 @@ def login():
                     user.username,
                     user.email,
                 )
-                return response(success=False, code=LoginStatusCode.InternalError)
+                return response(success=False, code=LoginStatusCode.InternalError.value)
         except Exception as e:
             current_app.logger.error("In login function, an error occurred: %s", e)
-            return response(success=False, code=LoginStatusCode.InternalError)
-    return response(success=False, code=LoginStatusCode.BadRequest)
+            return response(success=False, code=LoginStatusCode.InternalError.value)
+    return response(success=False, code=LoginStatusCode.BadRequest.value)
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -127,19 +127,29 @@ def register():
         try:
             email = session.get("valid_email")
             if not email:
-                return response(success=False, code=RegisterStatusCode.EmailNotVerified)
+                return response(
+                    success=False, code=RegisterStatusCode.EmailNotVerified.value
+                )
 
             name = request.json["username"].strip()
             if not name:
-                return response(success=False, code=RegisterStatusCode.UsernameNull)
+                return response(
+                    success=False, code=RegisterStatusCode.UsernameNull.value
+                )
 
             if UserCredential.exists_username(name):
-                return response(success=False, code=RegisterStatusCode.UsernameOccupied)
+                return response(
+                    success=False, code=RegisterStatusCode.UsernameOccupied.value
+                )
             if UserCredential.exists_email(email):
-                return response(success=False, code=RegisterStatusCode.EmailOccupied)
+                return response(
+                    success=False, code=RegisterStatusCode.EmailOccupied.value
+                )
             password = request.json["password"]
             if not password:
-                return response(success=False, code=RegisterStatusCode.PasswordNull)
+                return response(
+                    success=False, code=RegisterStatusCode.PasswordNull.value
+                )
 
             salt = secrets.token_bytes(64)
             password_hash = hash_password(password, salt)
@@ -148,8 +158,8 @@ def register():
 
         except Exception as e:
             current_app.logger.error(e)
-            return response(success=False, code=RegisterStatusCode.InternalError)
-    return response(success=False, code=RegisterStatusCode.BadRequest)
+            return response(success=False, code=RegisterStatusCode.InternalError.value)
+    return response(success=False, code=RegisterStatusCode.BadRequest.value)
 
 
 @auth_bp.route("/register/validate", methods=["POST"])
@@ -170,7 +180,7 @@ def validate():
             if timestamp and timestamp + get_config("MAIL_SEND_INTERVAL") > time():
                 return response(
                     success=False,
-                    code=ValidateStatusCode.TooFrequent,
+                    code=ValidateStatusCode.TooFrequent.value,
                     data={"timestamp": timestamp},
                 )
 
@@ -178,11 +188,13 @@ def validate():
             email_former = session.get("email")
             if not email_former or email_former != email:
                 if not check_email_service(email):
-                    return response(success=False, code=ValidateStatusCode.Unavailable)
+                    return response(
+                        success=False, code=ValidateStatusCode.Unavailable.value
+                    )
                 session["email"] = email
 
             if UserCredential.exists_email(email):
-                return response(success=False, code=ValidateStatusCode.Occupied)
+                return response(success=False, code=ValidateStatusCode.Occupied.value)
 
             validateCode = randint(100000, 999999)
             message = Message(
@@ -200,7 +212,9 @@ def validate():
                     e,
                 )
                 session.pop("email")
-                return response(success=False, code=ValidateStatusCode.InternalError)
+                return response(
+                    success=False, code=ValidateStatusCode.InternalError.value
+                )
             session["validate_code"] = str(validateCode)
             session["retry_times"] = 0
             session["request_timestamp"] = time()
@@ -210,7 +224,7 @@ def validate():
             validate_code = session.get("validate_code")
             if not validate_code:
                 return response(
-                    success=False, code=ValidateStatusCode.CodeExpiredOrNotRequest
+                    success=False, code=ValidateStatusCode.CodeExpiredOrNotRequest.value
                 )
 
             input_code = request.json["validate_code"].strip()
@@ -221,11 +235,11 @@ def validate():
                     session.pop("validate_code")
                     session.pop("email")
                     return response(
-                        success=False, code=ValidateStatusCode.RetryTooFrequent
+                        success=False, code=ValidateStatusCode.RetryTooFrequent.value
                     )
                 return response(
                     success=False,
-                    code=ValidateStatusCode.WrongCode,
+                    code=ValidateStatusCode.WrongCode.value,
                     data={
                         "opportunity": get_config("CODE_MAX_RETRY")
                         - session["retry_times"]
@@ -235,7 +249,7 @@ def validate():
             session.pop("validate_code")
             session["valid_email"] = session["email"]
             return response(success=True)
-    return response(success=False, code=ValidateStatusCode.BadRequest)
+    return response(success=False, code=ValidateStatusCode.BadRequest.value)
 
 
 @auth_bp.route("/register/recaptcha", methods=["POST"])
@@ -248,11 +262,11 @@ def recaptcha():
         InternalError = 101
 
     if not request.json or "recaptcha" not in request.json:
-        return response(success=False, code=RecaptchaStatusCode.BadRequest)
+        return response(success=False, code=RecaptchaStatusCode.BadRequest.value)
 
     recaptcha_token = request.json["recaptcha"]
     if not recaptcha_token:
-        return response(success=False, code=RecaptchaStatusCode.NotFinish)
+        return response(success=False, code=RecaptchaStatusCode.NotFinish.value)
 
     retry = session.get("recaptcha_retry_times", 0) + 1
     max_retry = get_config("RECAPTCHA_MAX_RETRY")
@@ -261,13 +275,12 @@ def recaptcha():
     if retry >= max_retry:
         recaptcha_timestamp = session.get("recaptcha_timestamp")
         current_time = time()
-
         if recaptcha_timestamp:
             wait_time = recaptcha_timestamp + interval - current_time
             if wait_time > 0:
                 return response(
                     success=False,
-                    code=RecaptchaStatusCode.TooFrequent,
+                    code=RecaptchaStatusCode.TooFrequent.value,
                     data={"time": math.ceil(wait_time)},
                 )
             else:
@@ -277,7 +290,7 @@ def recaptcha():
             session["recaptcha_timestamp"] = current_time
             return response(
                 success=False,
-                code=RecaptchaStatusCode.TooFrequent,
+                code=RecaptchaStatusCode.TooFrequent.value,
                 data={"time": interval},
             )
     else:
@@ -291,18 +304,18 @@ def recaptcha():
         resp_json = resp.json()
     except Exception as e:
         current_app.logger.error("In recaptcha function, an error occurred: %s", e)
-        return response(success=False, code=RecaptchaStatusCode.InternalError)
+        return response(success=False, code=RecaptchaStatusCode.InternalError.value)
 
     if resp_json.get("success"):
         return response(success=True)
     else:
-        return response(success=False, code=RecaptchaStatusCode.NotPassed)
+        return response(success=False, code=RecaptchaStatusCode.NotPassed.value)
 
 
 @auth_bp.route("/logout", methods=["GET"])
 def logout():
     logout_user()
-    return redirect(url_for("page_bp.index"))
+    return redirect(url_for("page.index"))
 
 
 # @auth_bp.route("/admin")
