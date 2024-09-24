@@ -22,9 +22,72 @@ from .util import (
     get_digest_for_each,
 )
 from models import User, Passage
+from enum import Enum
+from time import time
+from math import ceil, floor
+from functools import wraps
+
+
+class statusCode(Enum):
+    TooFrequent = 1
+
+
+def timing(limit=5, interval=30, cooldown_window=5):
+    def decorator(func):
+        key = f"{func.__name__}_state"
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            current = time()
+            state = session.get(key, {"t": 0.0, "c": 0, "l": current})
+            time_remain = state["t"] + interval - current
+            if time_remain > 0:
+                return response(
+                    success=False,
+                    code=statusCode.TooFrequent.value,
+                    data={"limit": ceil(time_remain)},
+                )
+            res = func(*args, **kwargs)
+            if current - state["l"] <= cooldown_window:
+                state["c"] += 1
+            if state["c"] >= limit:
+                state["t"] = time()
+                state["c"] = 0
+            state["l"] = current
+            session[key] = state
+            return res
+
+        return wrapper
+
+    return decorator
 
 
 page_bp = Blueprint("page", __name__)
+
+
+@page_bp.context_processor
+def inject():
+    return {"statusCode": {item.value: item.name for item in statusCode}}
+
+
+@page_bp.route("/upload", methods=["POST"])
+@login_required
+def upload_file():
+    if "file" not in request.files:
+        return "没有文件被上传"
+
+    file = request.files.getlist("file")
+    print(file)
+    abort(404)
+    if file.filename == "":
+        return "没有选择文件"
+
+    if file and allowed_file(file.filename):
+        # file.save(f"{app.config['UPLOAD_FOLDER']}/{file.filename}")
+        print(1)
+        return "文件上传成功"
+
+    return "文件类型不被允许"
 
 
 @page_bp.route("/rest", methods=["GET"])
@@ -34,7 +97,7 @@ def rest():
 
 @page_bp.route("/editor", methods=["GET"])
 def editor():
-    return render_template("editor.html")
+    return render_template("edi.html", upload_max_size=get_config("UPLOAD_MAX_SIZE"))
 
 
 @page_bp.route("/", methods=["GET"])
@@ -52,7 +115,7 @@ def index():
     order_by = request.args.get("order_by")
     order_direction = request.args.get("order_direction")
     if order_by and order_direction:
-        order_by = "time" if order_by.lower() == "time" else "heat"
+        order_by = "time" if order_by.lower() == "time" else "vote_up"
         order_direction = order_direction.upper() == "DESC"
         page_gen = Passage.retrieve_passages_paged(
             25, order_by=order_by, desc=order_direction
@@ -108,26 +171,70 @@ def passage(pid):
     pass
 
 
-@page_bp.route("/userprofile/edit/<int:uid>", methods=["POST"])
-@login_required
-def edit_user_profile(uid):
-    if uid == current_user.id and request.json:
-        intro = request.json["sign"]
-        User.update_intro(intro, uid)
-        return response(success=True)
-    abort(404)
+@timing(limit=5, interval=30)
+def intro_edit(uid):
+    intro = request.json["sign"]
+    if intro != current_user.intro:
+        try:
+            User.update_intro(intro, uid)
+        except Exception as e:
+            current_app.logger.error("In intro_edit, an error occurred: %s", e)
+            return response(success=False)
+    return response(success=True)
 
 
-@page_bp.route("/delete/<int:uid>/<int:pid>", methods=["POST"])
+@page_bp.route("/edit/<string:service>/<int:uid>", methods=["POST"])
+@page_bp.route("/edit/<string:service>/<int:uid>/<int:item_id>", methods=["POST"])
 @login_required
-def delete(uid, pid):
-    if uid == current_user.id:
-        Passage.delete_by_id(pid)
-        return response(success=True)
-    abort(404)
+def edit(service, uid, item_id=None):
+    if not request.json:
+        abort(404)
+    if uid != current_user.id:
+        abort(404)
+    match service:
+        case "passage":
+            pass
+        case "diary":
+            pass
+        case "question":
+            pass
+        case "comment":
+            pass
+        case "answer":
+            pass
+        case "intro":
+            return intro_edit(uid)
+        case _:
+            abort(404)
+    return response(success=True)
+
+
+@page_bp.route(
+    "/delete/<string:service>/<int:uid>/<int:item_id>", methods=["GET", "POST"]
+)
+@login_required
+def delete(service, uid, item_id):
+    if uid != current_user.id:
+        abort(404)
+    match service:
+        case "passage":
+            Passage.delete_by_id(item_id)
+        case "diary":
+            pass
+        case "question":
+            pass
+        case "comment":
+            pass
+        case "answer":
+            pass
+        case _:
+            abort(404)
+    return response(success=True)
 
 
 @page_bp.route("/search", methods=["POST"])
+@page_bp.route("/search/user", methods=["POST"])
+@timing(limit=10, interval=30, cooldown_window=4)
 def search():
     keys = request.json.keys()
     if request.json and "query" in keys and "type" in keys:
@@ -137,7 +244,7 @@ def search():
             case "all":
                 usrs = User.search_by_username(keyword, topk=10, desc=False)
                 passages = Passage.search_by_content(
-                    keyword, topk=10, is_draft=False, order_by="heat"
+                    keyword, topk=10, is_draft=False, order_by="vote_up"
                 )
                 return response(
                     success=True,
@@ -153,7 +260,7 @@ def search():
                 )
             case "passage":
                 passages = Passage.search_by_content(
-                    keyword, topk=10, is_draft=False, order_by="heat"
+                    keyword, topk=10, is_draft=False, order_by="vote_up"
                 )
                 return response(
                     success=True,
@@ -166,8 +273,3 @@ def search():
 
     else:
         return response(success=False, mes="请求错误")
-
-
-@page_bp.route("/edit")
-def edit():
-    pass

@@ -1,4 +1,5 @@
 from flask import jsonify, current_app, url_for, abort, session
+from flask_login import current_user
 from random import choice
 from models import Passage, Avatar, User
 from typing import Optional, Union

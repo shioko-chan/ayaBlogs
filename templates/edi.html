@@ -1,25 +1,46 @@
 {% extends 'page.html' %}
 
 {% block head %}
+<link rel="stylesheet" href="https://unpkg.com/vditor@3.10.6/dist/index.css" />
+<script src="https://unpkg.com/vditor@3.10.6/dist/index.min.js"></script>
 
 {% endblock %}
-
+{% block topbar %}
+<li></li>
+{% endblock %}
 {% block main %}
 <main class="grow">
   <div id="vditor"></div>
 </main>
 {% endblock %}
 {% block script %}
-<script>z
+<script>
+  const userLang = navigator.language || navigator.userLanguage;
+  console.log(userLang);
+  console.log("{{ lang }}");
+  const upload_max_size = {{ upload_max_size }};
   document.addEventListener('DOMContentLoaded', () => {
     new Vditor('vditor', {
       height: '100%',
       width: '100%',
+      lang: "{{ lang }}".replace('-', '_'),
       cache: {
         enable: false
       },
+      counter: {
+        enable: true,
+        max: 10000,
+      },
+      toolbar: ["emoji", "headings", "bold", "italic", "strike", "check", "line",
+        "quote", "|", "list", "ordered-list", "outdent", "indent", "table", "code", "inline-code", "upload",
+        "link", "|", "undo", "redo", "edit-mode", "fullscreen", "outline", "|", "info"],
+      upload: {
+        url: "{{ url_for('page.upload_file') }}",
+        max: upload_max_size * 1024,
+        fieldName: "file",
+      },
       undoDelay: 100,
-      value: 'Markdown 配置'
+      value: ''
     })
   })
 </script>

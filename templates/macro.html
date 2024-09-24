@@ -1,0 +1,22 @@
+{% macro item_list(list, class_name, editable, edit_url="", delete_url="") %}
+{% for item in list %}
+<div class="{{ class_name }} passage-container container p-6 border-b m-auto">
+  <div class="flex justify-end w-full mb-2 min-h-5">
+    {% if editable %}
+    <p class="flex w-12 justify-between">
+      <button type="button" data-url="{{ edit_url }}"><img
+          src="{{ url_for('static', service='default', filename='edit.png') }}"
+          class="aspect-square w-5 self-center" /></button>
+      <button type="button" data-url="{{ delete_url }}" class="delete-button"><img
+          src="{{ url_for('static', service='default', filename='delete.png') }}"
+          class="aspect-square w-5 self-center" /></button>
+    </p>
+    {% endif %}
+  </div>
+  <article class="w-full markdown-body passage max-h-48 overflow-hidden">{{ item.content }}</article>
+  <div class="w-full flex justify-end mt-3">
+    <p class="text-gray-500 text-sm">{{ item.create_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+  </div>
+</div>
+{% endfor %}
+{% endmacro %}

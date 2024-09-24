@@ -33,6 +33,7 @@ if __name__ == "__main__":
     IMAGE_FOLDER = config["storage"]["image_folder"]
     ES_MODULE_FOLDER = config["storage"]["es_module_folder"]
     ALLOWED_EXTENSIONS = config["storage"]["allowed_extensions"]
+    UPLOAD_MAX_SIZE = config["storage"]["upload_max_size"]
 
     SESSION_TYPE = config["session"]["session_type"]
     SESSION_DIR = config["session"]["session_dir"]
@@ -109,6 +110,7 @@ if __name__ == "__main__":
     app.config.update(
         BKG=backgrounds,
         ALLOWED_EXTENSIONS=ALLOWED_EXTENSIONS,
+        UPLOAD_MAX_SIZE=UPLOAD_MAX_SIZE,
     )
 
     login_manager = LoginManager()
@@ -119,9 +121,42 @@ if __name__ == "__main__":
     def load_user(user_id):
         return User.get_by_id(user_id)
 
+    language_map = {
+        "en": "en-US",
+        "fr": "fr-FR",
+        "pt": "pt-BR",
+        "ja": "ja-JP",
+        "ko": "ko-KR",
+        "ru": "ru-RU",
+        "sv": "sv-SE",
+        "zh": "zh-CN",
+    }
+    language_list = [
+        "en",
+        "fr",
+        "pt",
+        "ja",
+        "ko",
+        "ru",
+        "sv",
+        "zh",
+        "en-US",
+        "fr-FR",
+        "pt-BR",
+        "ja-JP",
+        "ko-KR",
+        "ru-RU",
+        "sv-SE",
+        "zh-CN",
+        "zh-TW",
+    ]
+
     @app.context_processor
     def lang():
-        user_language = request.accept_languages.best_match(["en", "zh"]) or "en"
+        print(request.accept_languages)
+        user_language = request.accept_languages.best_match(language_list) or "en-US"
+        if "-" not in user_language:
+            user_language = language_map[user_language]
         return {"lang": user_language}
 
     CORS(app)

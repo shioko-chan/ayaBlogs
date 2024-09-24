@@ -57,7 +57,6 @@ export function search(search_type, search_url) {
                         return;
                     }
                     let data = resp.data;
-                    console.log(data)
                     let optionHtml = '';
                     switch (search_type) {
                         case "all": optionHtml = generateSearchItem(data.passages, '文章') + generateSearchItem(data.usrs, '用户'); break;

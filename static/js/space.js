@@ -2,11 +2,7 @@ import { runAfterDOMLoaded } from './utils.js';
 import { marked } from 'https://cdn.jsdelivr.net/npm/marked@14.1.0/+esm';
 import DOMPurify from 'https://cdn.jsdelivr.net/npm/dompurify@3.1.6/+esm';
 
-const confirmButton = document.getElementById('confirm-button');
-const cancelButton = document.getElementById('cancel-button');
-const confirmationModal = document.getElementById('confirmation-modal');
-
-async function confirmDelete() {
+async function solveToast(confirmButton, cancelButton) {
     return new Promise((resolve) => {
         const onConfirm = () => { resolve(true); cleanup(); };
         const onCancel = () => { resolve(false); cleanup(); };
@@ -20,10 +16,13 @@ async function confirmDelete() {
 }
 
 function addDeleteListener() {
+    const confirmationModal = document.getElementById('confirmation-modal');
+    const confirmButton = document.getElementById('confirm-delete-button');
+    const cancelButton = document.getElementById('cancel-delete-button');
     document.querySelectorAll('.delete-button').forEach((btn) => {
         btn.addEventListener('click', async () => {
             confirmationModal.classList.remove('hidden');
-            if (await confirmDelete()) {
+            if (await solveToast(confirmButton, cancelButton)) {
                 const url = btn.getAttribute('data-url');
                 fetch(url, {
                     method: "POST", headers: {
@@ -94,6 +93,25 @@ function addSignEditListener() {
             }, body: JSON.stringify({
                 sign: inputBox.textContent
             })
+        }).then(response => response.json()).then(data => {
+            if (data.success) {
+                return;
+            }
+            switch (data.code) {
+                case 1: {
+                    let toast = document.getElementById("too-frequent");
+                    let button = document.getElementById("too-frequent-button");
+                    toast.classList.remove("hidden");
+                    let buttonSolver = () => {
+                        toast.classList.add("hidden");
+                        button.removeEventListener("click", buttonSolver);
+                    }
+                    button.addEventListener("click", buttonSolver);
+                    break;
+                }
+                // solve more status
+                default: console.log(data)
+            }
         });
     });
 }
@@ -110,9 +128,24 @@ function addScrollListener() {
     observer.observe(sentinel);
 }
 
+function addVisibilityEditListener() {
+    const button = document.getElementById("set-visibility-button");
+    const toast = document.getElementById("visibility-modal");
+    const confirmButton = document.getElementById('confirm-visibility-change-button');
+    const cancelButton = document.getElementById('cancel-visibility-change-button');
+    button.addEventListener("click", async () => {
+        toast.classList.remove("hidden");
+        if (await solveToast(confirmButton, cancelButton)) {
+            console.log("confirm");
+        }
+        toast.classList.add("hidden");
+    });
+}
+
 export function noneditable() {
     runAfterDOMLoaded(() => {
         convertMD2HTML();
+        addScrollListener();
     });
 }
 
@@ -122,6 +155,7 @@ export function editable() {
     runAfterDOMLoaded(() => {
         addDeleteListener();
         addSignEditListener();
+        addVisibilityEditListener();
     });
 }
 

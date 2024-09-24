@@ -1,4 +1,5 @@
 {% extends 'page.html' %}
+{% from 'macro.html' import item_list %}
 
 {% block title %}
 <title>{{ user.username }}的个人空间</title>
@@ -11,8 +12,47 @@
     <div class="bg-white p-6 rounded-lg shadow-lg w-80">
       <p class="text-lg mb-4">确实要删除吗？</p>
       <div class="flex justify-end space-x-4">
-        <button id="confirm-button" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">确认</button>
-        <button id="cancel-button" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">取消</button>
+        <button id="confirm-delete-button" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">确认</button>
+        <button id="cancel-delete-button" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="visibility-modal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50">
+  <div class="w-full h-full flex items-center justify-center">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-80">
+      <p class="text-lg font-semibold mb-4">更改其他人可见的空间展示内容</p>
+      <div class="space-y-4">
+        <label class="flex items-center bg-gray-100 p-3 rounded-lg hover:bg-gray-200 transition duration-200">
+          <div class="flex-1 text-gray-800">点赞记录</div>
+          <input type="checkbox" name="like_record" class="form-checkbox text-blue-600" />
+        </label>
+
+        <label class="flex items-center bg-gray-100 p-3 rounded-lg hover:bg-gray-200 transition duration-200">
+          <div class="flex-1 text-gray-800">文章</div>
+          <input type="checkbox" name="articles" class="form-checkbox text-blue-600" />
+        </label>
+
+        <label class="flex items-center bg-gray-100 p-3 rounded-lg hover:bg-gray-200 transition duration-200">
+          <div class="flex-1 text-gray-800">提问</div>
+          <input type="checkbox" name="questions" class="form-checkbox text-blue-600" />
+        </label>
+
+        <label class="flex items-center bg-gray-100 p-3 rounded-lg hover:bg-gray-200 transition duration-200">
+          <div class="flex-1 text-gray-800">回答</div>
+          <input type="checkbox" name="answers" class="form-checkbox text-blue-600" />
+        </label>
+
+        <label class="flex items-center bg-gray-100 p-3 rounded-lg hover:bg-gray-200 transition duration-200">
+          <div class="flex-1 text-gray-800">评论</div>
+          <input type="checkbox" name="comments" class="form-checkbox text-blue-600" />
+        </label>
+      </div>
+      <div class="flex justify-end space-x-4">
+        <button id="confirm-visibility-change-button"
+          class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">确认</button>
+        <button id="cancel-visibility-change-button"
+          class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">取消</button>
       </div>
     </div>
   </div>
@@ -23,6 +63,10 @@
 {% block topbar %}
 
 {% if is_current_user %}
+<li>
+  <button id="set-visibility-button" type="button" data-url="# url for visibility"
+    class="text-gray-600 hover:text-gray-800">设置可见性</button>
+</li>
 {% if is_draft %}
 <li>
   <a href="{{ url_for('page.space', uid=user.id) }}" class="text-gray-600 hover:text-gray-800">查看主页</a>
@@ -67,11 +111,16 @@
         <div class="ml-4 mb-2">
           <h2 class="text-white text-2xl font-semibold">{{ user.username }}</h2>
           <div class="flex flex-row">
-            <div id="sign-input-box" class="text-gray-300 mr-2 bg-transparent" contenteditable="false">{{ user.intro
-              or 'Colorless green ideas sleep furiously.' }}</div>
+            <div id="sign-input-box" class="text-gray-300 mr-2 bg-transparent" contenteditable="false">
+              {% if user.intro == None %}
+              {{ 'Colorless green ideas sleep furiously.' }}
+              {% else %}
+              {{ user.intro }}
+              {% endif %}
+            </div>
             {% if is_current_user %}
             <button id="sign-input-button" type="button"
-              data-url="{{ url_for('page.edit_user_profile', uid=user.id) }}"><img
+              data-url="{{ url_for('page.edit', service='intro', uid=user.id) }}"><img
                 src="{{ url_for('static', service='default', filename='edit.png') }}"
                 class="aspect-square w-5 self-center" style="filter: invert(100%);" /></button>
             {% endif %}
@@ -81,26 +130,34 @@
     </div>
   </div>
   <div class="h-6"></div>
-  {% for passage in passages %}
-  <div class="passage-container container p-6 border-b m-auto">
-    <div class="flex justify-end w-full mb-2 min-h-5">
-      {% if is_current_user %}
-      <p class="flex w-12 justify-between">
-        <button type="button" data-url="{{ url_for('page.edit', uid=user.id, pid=passage.id) }}"><img
-            src="{{ url_for('static', service='default', filename='edit.png') }}"
-            class="aspect-square w-5 self-center" /></button>
-        <button type="button" data-url="{{ url_for('page.delete', uid=user.id, pid=passage.id) }}"
-          class="delete-button"><img src="{{ url_for('static', service='default', filename='delete.png') }}"
-            class="aspect-square w-5 self-center" /></button>
-      </p>
-      {% endif %}
-    </div>
-    <article class="w-full markdown-body passage max-h-48 overflow-hidden">{{ passage.content }}</article>
-    <div class="w-full flex justify-end mt-3">
-      <p class="text-gray-500 text-sm">{{ passage.create_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
-    </div>
-  </div>
-  {% endfor %}
+  <nav class="flex justify-around p-4">
+    <button type="button" class="flex-1 text-center text-gray-600 border-b-4
+      border-transparent hover:text-blue-500 py-2 px-4 transition-colors
+      duration-300 focus:outline-none focus:border-gray-500 focus:ring-blue-300" id="nav-like">点赞</button>
+    <button type="button" class="flex-1 text-center text-gray-600 border-b-4
+          border-transparent hover:text-blue-500 py-2 px-4 transition-colors
+          duration-300 focus:outline-none focus:border-gray-500 focus:ring-blue-300" id="nav-passage">文章</button>
+    <button type="button" class="flex-1 text-center text-gray-600 border-b-4
+          border-transparent hover:text-blue-500 py-2 px-4 transition-colors
+          duration-300 focus:outline-none focus:border-gray-500 focus:ring-blue-300" id="nav-question">提问</button>
+    <button type="button" class="flex-1 text-center text-gray-600 border-b-4
+        border-transparent hover:text-blue-500 py-2 px-4 transition-colors
+        duration-300 focus:outline-none focus:border-gray-500 focus:ring-blue-300" id="nav-answer">回答</button>
+    <button type="button" class="flex-1 text-center text-gray-600 border-b-4
+          border-transparent hover:text-blue-500 py-2 px-4 transition-colors
+          duration-300 focus:outline-none focus:border-gray-500 focus:ring-blue-300" id="nav-comment">评论</button>
+    {% if is_current_user %}
+    <button type="button" class="flex-1 text-center text-gray-600 border-b-4
+          border-transparent hover:text-blue-500 py-2 px-4 transition-colors
+          duration-300 focus:outline-none focus:border-gray-500 focus:ring-blue-300" id="nav-diary">日记</button>
+    {% endif %}
+  </nav>
+
+
+  {{ item_list(passages, "passages", is_current_user, edit_url="{{ url_for('page.edit', uid=user.id, service='passage',
+  item_id=item.id) }}",
+  delete_url="{{ url_for('page.delete', uid=user.id, service='passage', item_id=item.id) }}" ) }}
+  <div id="sentinel" class=""></div>
 </main>
 {% endblock %}
 

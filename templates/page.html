@@ -12,6 +12,20 @@
 {% block body %}
 
 <body class="h-screen flex flex-col justify-between items-stretch bg-gray-800">
+
+
+  <div id="too-frequent" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50">
+    <div class="w-full h-full flex items-center justify-center">
+      <div class="bg-white p-8 rounded-lg shadow-lg w-96 transition-transform transform scale-100 hover:scale-105">
+        <div class="flex flex-col items-center">
+          <h2 class="text-xl font-semibold mb-4">⚠️服务请求过于频繁</h2>
+          <p class="text-gray-600 mb-4">请稍后再试，感谢您的耐心等待。</p>
+          <button id="too-frequent-button"
+            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
   {% block toast %}
 
   {% endblock %}
@@ -32,7 +46,8 @@
 
           {% endblock %}
           <div id="search-results"
-            class="absolute z-10 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg top-full hidden"></div>
+            class="absolute z-10 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg top-full hidden">
+          </div>
         </div>
       </div>
     </div>

@@ -1,94 +1,14 @@
-from flask import current_app, abort
-from typing import Callable, Optional, TypeVar, List
-from dataclasses import fields, is_dataclass
-from collections import defaultdict
+# 假设这些是你已有的模块或功能
 import copy
-from dataclasses import dataclass
+from typing import List, Any
+from collections import defaultdict
 
 
-def transact(transact: str, params=None, have_return=True):
-    pool = current_app.extensions["pool"]
-    return pool(transact, params, have_return)
-
-
-T = TypeVar("T")
-
-
-def unique(func: Callable[..., Optional[List[T]]]) -> Callable[..., Optional[T]]:
-    def wrapper(*args, **kwargs):
-        res = func(*args, **kwargs)
-        return res[0] if res else None
-
-    return wrapper
-
-
-def from_sql_results(cls, results):
-    title, content = results
-    return [cls(**dict(zip(title, item))) for item in content]
-
-
-def exists(cls, use_and_operator=True, **kwargs):
-    op = "AND" if use_and_operator else "OR"
-    _, val = transact(
-        f"SELECT 1 WHERE EXISTS(SELECT 1 FROM {cls.__name__} WHERE {f' {op} '.join([f'{key} = %s' for key in kwargs.keys()])})",
-        tuple(kwargs.values()),
-    )
-    return bool(val)
-
-
-def get_config(key, default=None):
-    return current_app.config.get(key, default)
-
-
-def get_extension(key, default=None):
-    return current_app.extensions.get(key, default)
-
-
-def field_names(cls):
-    if is_dataclass(cls):
-        return [field.name for field in fields(cls)]
-    else:
-        raise ValueError("Not a dataclass")
-
-
-@dataclass
+# 模拟的模型类
 class ModelBase:
-    id: int
-
-    @classmethod
-    def sql_generator(cls):
-        return SQLBuilder().table(cls.__name__)
-
-    @classmethod
-    def delete_by_id(cls, id):
-        transact(
-            cls.sql_generator().delete().where("id = %s").build(),
-            params=(id,),
-            have_return=False,
-        )
-
-    @classmethod
-    @unique
-    def get_by_id(cls, id):
-        return from_sql_results(
-            cls,
-            transact(
-                cls.sql_generator()
-                .select()
-                .col(*field_names(cls))
-                .where("id = %s")
-                .build(),
-                params=(id,),
-            ),
-        )
-
-    def reload_status(self):
-        new_self = self.__class__.get_by_id(self.id)
-        if new_self:
-            for key, val in new_self.__dict__.items():
-                setattr(self, key, val)
-        else:
-            abort(404)
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
 
 
 class SQLBuilder:
@@ -268,22 +188,75 @@ class SQLBuilder:
         return query + ";"
 
 
+results = [
+    ModelBase(id=i, name=f"Item {i}") for i in range(1, 21)  # 生成 20 个模拟记录
+]
+
+
+# 模拟的数据库操作
+def transact(sql, args):
+    print(f"Executing SQL: {sql}")
+    offset = int(sql.split("OFFSET ")[1].split(" ")[0])
+    limit = int(sql.split("NEXT ")[1].split(" ")[0])
+    return results[offset : offset + limit]
+
+
 class PageIter:
     def __init__(
         self, target_cls: ModelBase, gen: SQLBuilder, page_size, order_by, desc=True
     ):
+        self.gen = gen
+        self.condition = "1 = 1"
         self.page = 0
         self.page_size = page_size
         self.target_cls = target_cls
-        self.gen = gen.order_by(**{order_by: "DESC" if desc else "ASC"})
+        self.desc = desc
+        self.order_by = order_by
+        order_direction = "DESC" if desc else "ASC"
+        self.gen = self.gen.order_by(**{order_by: order_direction, "id": "ASC"})
+        self.args = ()
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        sql = self.gen.offset(self.page_size * self.page).fetch(self.page_size).build()
-        res = from_sql_results(self.target_cls, transact(sql))
-        if not res:
+        sql = (
+            self.gen.copy()
+            .offset(self.page_size * self.page)
+            .fetch(self.page_size)
+            .where(self.condition)
+            .build()
+        )
+        res = transact(sql, self.args)
+        if res:
+            last = res[-1]
+            self.condition = f"{self.order_by} {'<=' if self.desc else '>='} %s AND id > {getattr(last, 'id')}"
+            getattr(last, self.order_by)
+            self.page += 1
+            return res
+        else:
             raise StopIteration
-        self.page += 1
-        return res
+
+
+# 测试 PageIter
+def test_page_iter():
+    # 初始化 SQLBuilder
+    sql_builder = SQLBuilder().table("foo").select().col("*")
+
+    # 创建 PageIter 实例
+    paginator = PageIter(
+        target_cls=ModelBase, gen=sql_builder, page_size=5, order_by="name", desc=True
+    )
+
+    # 迭代结果
+    for page in paginator:
+        print(f"Page results: {[item.name for item in page]}")
+
+
+# 运行测试
+if __name__ == "__main__":
+    test_page_iter()
+    builder = SQLBuilder().select().table("foo").col("*")
+    s1 = builder.col("123").where("1=1").build()
+    s2 = builder.where("1=0").build()
+    print(s1, s2)
