@@ -1,0 +1,136 @@
+{% set mjs_path = url_for('static', service='js', filename='components.mjs') %}
+{% macro digest_list() %}
+<template id="digest-list-tmpl">
+  <link rel="stylesheet" href="{{ url_for('static', service='css', filename='out.css') }}" />
+
+</template>
+<script type="module">
+  import { registerDigestList } from "{{ mjs_path }}"
+  registerDigestList();
+</script>
+{% endmacro %}
+
+{% macro search_bar() %}
+<template id="search-bar-tmpl">
+  <link rel="stylesheet" href="{{ url_for('static', service='css', filename='out.css') }}" />
+  <div class="relative w-40 sm:w-60 lg:w-80">
+    <form id="search-form" action="#" method="post" class="flex flex-row items-center relative justify-start w-full">
+      <input id="search-input" type="search" name="search" placeholder="搜索当前用户内容" class="px-2 py-2 border border-gray-300 rounded-md box-border flex-grow
+        focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-32 sm:max-w-52 lg:max-w-72" />
+      <button type="submit" class="ml-3 box-border">
+        <img src="{{ url_for('static', service='default', filename='search.png') }}" class="aspect-square w-5" />
+      </button>
+    </form>
+    <div id="search-results"
+      class="absolute w-full z-10 mt-1 flex-1 bg-white border border-gray-300 rounded-md shadow-lg top-full hidden max-h-72 overflow-scroll items-stretch">
+    </div>
+  </div>
+</template>
+<script type="module">
+  import { registerSearchBar } from "{{ mjs_path }}"
+  registerSearchBar();
+</script>
+{% endmacro %}
+
+{% macro digest_item() %}
+<template id="digest-tmpl">
+  <link rel="stylesheet" href="{{ url_for('static', service='css', filename='out.css') }}" />
+  <style>
+    .grid-cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid-rows-4 {
+      grid-template-rows: repeat(4, auto);
+    }
+
+    .gap-4 {
+      gap: 1rem;
+    }
+  </style>
+  <div class="bg-white grid gap-2"
+    style="grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 6fr) minmax(0, 1fr);">
+    <dl class="grid gap-2 row-start-1 row-end-2 col-start-1 col-end-2"
+      style="grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); grid-template-rows: minmax(0, 1fr) minmax(0, 2fr);">
+      <dt class="sr-only">标题</dt>
+      <dd class="col-start-1 col-span-full row-start-1 row-end-2 text-indigo-500  bg-slate-500">
+        <div id="title" class="max-h-full max-w-full">
+          炮打司令部————我的一张大字报
+        </div>
+      </dd>
+
+      <dt class="sr-only">图片</dt>
+      <dd class="col-start-1 col-end-2 row-start-2 row-end-3 bg-blue-600">
+        <img id="image" src="{{ url_for('static', service='bkg', filename='grassland.jpg') }}"
+          class="object-cover max-h-full max-w-full" />
+      </dd>
+
+      <dt class="sr-only">内容</dt>
+      <dd class="col-start-2 col-end-3 row-start-2 row-end-3 text-indigo-500 bg-green-600">
+        <div id="digest" class="max-h-full max-w-full">广阔天地，大有作为</div>
+      </dd>
+    </dl>
+    <dl class="flex flex-row items-stretch justify-between">
+      <dt class="sr-only">作者</dt>
+      <dd class="text-indigo-500 bg-gray-900">
+        <div id="author" class="max-h-full max-w-full">作者信息</div>
+      </dd>
+
+      <dt class="sr-only">点赞数</dt>
+      <dd class="text-indigo-500">
+        <div class="max-h-full max-w-full">点赞数信息</div>
+      </dd>
+
+      <dt class="sr-only">发布时间</dt>
+      <dd id="timestamp" class="text-indigo-500 bg-fuchsia-700">
+        <div class="max-h-full max-w-full">
+          发布时间信息
+        </div>
+      </dd>
+    </dl>
+  </div>
+</template>
+<script type="module">
+  import { registerDigestItem } from "{{ mjs_path }}"
+  registerDigestItem();
+</script>
+{% endmacro %}
+
+<!--
+<dt class="sr-only">
+  图片
+</dt>
+<dd class="col-span-1 row-span-full bg-blue-600">
+  {# <img id="image" src="{{ url_for('static', service='bkg', filename='grassland.jpg') }}"
+    class="aspect-auto w-full" /> #}
+</dd>
+<dt class="sr-only">
+  标题
+</dt>
+<dd id="title" class="text-indigo-500 col-span-2 row-span-1 bg-slate-500">
+  {# 炮打司令部————我的一张大字报 #}
+</dd>
+<dt class="sr-only">
+  内容
+</dt>
+<dd id="digest" class="text-indigo-500 col-span-1 row-span-2 bg-green-600">
+  {# 广阔天地，大有作为 #}
+</dd>
+<dt class="sr-only">
+  作者
+</dt>
+<dd id="author" class="text-indigo-500 bg-gray-900 col-span-3 row-span-3">
+
+</dd>
+<dt class="sr-only">
+  发布时间
+</dt>
+<dd id="timestamp" class="text-indigo-500 bg-fuchsia-700 col-span-3 row-span-1">
+
+</dd>
+<dt class="sr-only">
+  点赞数
+</dt>
+<dd class="text-indigo-500">
+
+</dd>

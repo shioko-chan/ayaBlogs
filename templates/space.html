@@ -1,5 +1,6 @@
 {% extends 'page.html' %}
 {% from 'macro.html' import item_list %}
+{% from 'components.html' import search_bar %}
 
 {% block title %}
 <title>{{ user.username }}的个人空间</title>
@@ -93,14 +94,10 @@
 {% endif %}
 {% endblock %}
 
-{% block searchform %}
-<form action="{{ url_for('page.search', uid=user.id) }}" method="post">
-  <input id="search-input" type="text" name="search" placeholder="搜索当前用户内容"
-    class="px-3 py-2 w-64 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-  <button type="submit" class="ml-4"><img src="{{ url_for('static', service='default', filename='search.png') }}"
-      class="aspect-square w-5 self-center" /></button>
-</form>
+{% block search %}
+<div is="search-bar"></div>
 {% endblock %}
+
 {% block main %}
 <main class="flex-grow bg-white w-full">
   <div class="w-full h-56 bg-cover bg-center flex flex-col justify-end items-center"
@@ -163,8 +160,6 @@
 
 {% block script %}
 <script type="module">
-  import { search } from "{{ url_for('static', service='js', filename='search.js') }}"
-  search("passage", "{{ url_for('page.search') }}");
   {% if is_current_user %}
   import { editable } from "{{ url_for('static', service='js', filename='space.js') }}"
   editable();
@@ -173,4 +168,8 @@
   noneditable();
   {% endif %}
 </script>
+{% endblock %}
+
+{% block components %}
+{{ search_bar() }}
 {% endblock %}

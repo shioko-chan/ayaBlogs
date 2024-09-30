@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% block head %}
 <link rel="stylesheet"
   href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.6.1/github-markdown-light.min.css" />
@@ -11,8 +12,7 @@
 
 {% block body %}
 
-<body class="h-screen flex flex-col justify-between items-stretch bg-gray-800">
-
+<body class="h-screen w-screen flex flex-col justify-between items-stretch bg-gray-800 box-border">
 
   <div id="too-frequent" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50">
     <div class="w-full h-full flex items-center justify-center">
@@ -31,25 +31,20 @@
   {% endblock %}
 
   <header class="bg-white shadow-lg border-b-2">
-    <div class="px-4 py-6 flex justify-between items-center w-full">
-      <a href="#" class="text-xl font-semibold text-gray-800 ml-10">AYABlogs</a>
-      <div class="flex justify-between items-center mr-10">
-        <nav class="mr-6">
-          <ul class="flex space-x-4">
-            {% block topbar %}
-
-            {% endblock %}
-          </ul>
-        </nav>
-        <div class="relative flex justify-between items-center">
-          {% block searchform %}
+    <div class="px-4 py-4 flex flex-row justify-between items-center w-full">
+      <a href="#" class="text-xl font-semibold text-gray-800 pl-2 hidden sm:block">AYABlogs</a>
+      <nav class="w-full sm:w-auto">
+        <ul class="flex items-center space-x-4">
+          {% block topbar %}
 
           {% endblock %}
-          <div id="search-results"
-            class="absolute z-10 mt-1 w-64 bg-white border border-gray-300 rounded-md shadow-lg top-full hidden">
-          </div>
-        </div>
-      </div>
+          <li>
+            {% block search %}
+
+            {% endblock %}
+          </li>
+        </ul>
+      </nav>
     </div>
   </header>
 

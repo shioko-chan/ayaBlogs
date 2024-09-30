@@ -1,43 +1,38 @@
-{% extends 'base.html' %}
+{% extends 'page.html' %}
+{% from 'components.html' import search_bar %}
 
-{% block body %}
-  <body class="bg-gray-100 flex flex-col items-stretch justify-between h-screen = bg-cover bg-no-repeat flex-grow" style="background-image: url({{ random_background }});">
-    <main class="flex flex-col flex-grow justify-center items-center">
-      <div id="ball" class="fixed bg-white rounded-full w-10 h-10"></div>
-    </main>
-    <footer class="bg-transparent text-white py-5">
-      <div class="w-full mx-auto px-4">
-        <div class="flex flex-col md:flex-row justify-between items-center">
-          <h5 class="text-lg font-semibold">AYABlogs</h5>
-          <p class="text-sm">Copyleft 2024 AYA Blogs. No rights reserved.</p>
-        </div>
-      </div>
-    </footer>
-    <script type="text/javascript">
-      document.addEventListener('DOMContentLoaded', () => {
-        const ball = document.getElementById('ball')
-        const W = document.body.clientWidth,
-          H = document.body.clientHeight,
-          R = ball.clientHeight / 2
-        ball.style.left = W / 2
-        ball.style.top = H / 2
-        const velocity = { x: 1, y: 1 },
-          velofactor = 5
-        let x = ball.offsetLeft,
-          y = ball.offsetTop
-        setInterval(() => {
-          if (x >= W - R || x <= R) {
-            velocity.x = -velocity.x
-          }
-          if (y >= H - R || y <= R) {
-            velocity.y = -velocity.y
-          }
-          x += velocity.x * velofactor
-          y += velocity.y * velofactor
-          ball.style.left = x + 'px'
-          ball.style.top = y + 'px'
-        }, 10)
-      })
-    </script>
-  </body>
+{% block main %}
+{# <main class="flex-grow flex-shrink overflow-hidden" id="canvas-container">
+  <canvas id="main-canvas" class="block w-full h-full">您的浏览器不支持html5 canvas</canvas>
+</main> #}
+<div is="search-bar" placeholder="foo"></div>
+{#
+<script>
+  const canvas = document.getElementById("main-canvas");
+  const container = document.getElementById("canvas-container");
+
+  function init_canvas() {
+    if (canvas.getContext) {
+      //resize_canvasboard();
+      let context = canvas.getContext("2d");
+    }
+  }
+  function resize_canvasboard() {
+    console.log(container.offsetHeight, container.clientHeight, container.offsetWidth);
+    canvas.height = container.offsetHeight;
+    canvas.width = container.offsetWidth;
+    canvas.style.height = container.offsetHeight + "px";
+    canvas.style.width = container.offsetWidth + "px";
+  }
+  // window.addEventListener("resize", resize_canvasboard);
+  document.addEventListener("DOMContentLoaded", init_canvas);
+</script>
+<style>
+  #main-canvas {
+    background-image: url({{ random_background }});
+    background-size: cover;
+    background-position: center;
+  }
+</style> #}
+{{ search_bar() }}
 {% endblock %}

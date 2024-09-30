@@ -65,6 +65,11 @@ def timing(limit=5, interval=30, cooldown_window=5):
 page_bp = Blueprint("page", __name__)
 
 
+@page_bp.route("/test")
+def test():
+    return render_template("test.html")
+
+
 @page_bp.context_processor
 def inject():
     return {"statusCode": {item.value: item.name for item in statusCode}}

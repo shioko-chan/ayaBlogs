@@ -1,0 +1,13 @@
+{% extends 'page.html' %}
+{% from 'components.html' import search_bar %}
+{% from 'components.html' import digest_item %}
+
+{% block main %}
+<div is="search-bar" placeholder="foo" search_url="/"></div>
+<div is="digest-item" class="w-2/3 h-40 sm:h-80 lg:h-160"></div>
+{% endblock %}
+
+{% block components %}
+{{ search_bar() }}
+{{ digest_item() }}
+{% endblock %}
