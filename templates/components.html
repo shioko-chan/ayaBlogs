@@ -35,61 +35,76 @@
 {% macro digest_item() %}
 <template id="digest-tmpl">
   <link rel="stylesheet" href="{{ url_for('static', service='css', filename='out.css') }}" />
-  <style>
-    .grid-cols-3 {
-      grid-template-columns: repeat(3, 1fr);
-    }
+  <div class="bg-white shadow-md rounded-lg p-4 grid gap-4"
+    style="grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto;">
 
-    .grid-rows-4 {
-      grid-template-rows: repeat(4, auto);
-    }
+    <dl class="grid gap-4 row-start-1 row-end-2 col-start-1 col-end-2"
+      style="grid-template-columns: 1fr 2fr; grid-template-rows: auto;">
 
-    .gap-4 {
-      gap: 1rem;
-    }
-  </style>
-  <div class="bg-white grid gap-2"
-    style="grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 6fr) minmax(0, 1fr);">
-    <dl class="grid gap-2 row-start-1 row-end-2 col-start-1 col-end-2"
-      style="grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); grid-template-rows: minmax(0, 1fr) minmax(0, 2fr);">
+      <!-- Title -->
       <dt class="sr-only">标题</dt>
-      <dd class="col-start-1 col-span-full row-start-1 row-end-2 text-indigo-500  bg-slate-500">
-        <div id="title" class="max-h-full max-w-full">
-          炮打司令部————我的一张大字报
-        </div>
+      <dd class="col-span-full">
+        <h1 id="title" class="text-gray-800 font-bold text-xl truncate">
+          这是一个很长的标题，很长很长这是一个很长的标题，很长很长这是一个很长的标题，很长很长
+          这是一个很长的标题，很长很长
+          这是一个很长的标题，很长很长
+          这是一个很长的标题，很长很长
+        </h1>
       </dd>
 
+      <!-- Image -->
       <dt class="sr-only">图片</dt>
-      <dd class="col-start-1 col-end-2 row-start-2 row-end-3 bg-blue-600">
+      <dd class="col-start-1 row-start-2 bg-gray-100 rounded overflow-hidden">
         <img id="image" src="{{ url_for('static', service='bkg', filename='grassland.jpg') }}"
-          class="object-cover max-h-full max-w-full" />
+          class="object-cover w-full h-48" />
       </dd>
 
+      <!-- Digest -->
       <dt class="sr-only">内容</dt>
-      <dd class="col-start-2 col-end-3 row-start-2 row-end-3 text-indigo-500 bg-green-600">
-        <div id="digest" class="max-h-full max-w-full">广阔天地，大有作为</div>
+      <dd class="col-start-2 row-start-2 text-gray-700">
+        <div id="digest" class="text-base leading-relaxed">
+          广阔天地，大有作为
+        </div>
       </dd>
     </dl>
-    <dl class="flex flex-row items-stretch justify-between">
+
+    <!-- Footer Information -->
+    <dl class="flex items-center justify-between text-sm text-gray-600">
+      <!-- Author -->
       <dt class="sr-only">作者</dt>
-      <dd class="text-indigo-500 bg-gray-900">
-        <div id="author" class="max-h-full max-w-full">作者信息</div>
+      <dd id="author" class="flex items-center">
+        <svg class="w-4 h-4 mr-2 text-indigo-500" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24">
+          <path d="M12 12c2.1 0 3.8-1.7 3.8-3.8S14.1 4.4 12 4.4s-3.8 1.7-3.8 3.8S9.9 12 12 12z" />
+          <path d="M12 14.6c-3.5 0-10.5 1.8-10.5 5.2v1.6h21v-1.6c0-3.4-7-5.2-10.5-5.2z" />
+        </svg>
+        作者信息
       </dd>
 
+      <!-- Likes -->
       <dt class="sr-only">点赞数</dt>
-      <dd class="text-indigo-500">
-        <div class="max-h-full max-w-full">点赞数信息</div>
+      <dd class="flex items-center">
+        <svg class="w-4 h-4 mr-2 text-indigo-500" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24">
+          <path
+            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+        点赞数信息
       </dd>
 
+      <!-- Timestamp -->
       <dt class="sr-only">发布时间</dt>
-      <dd id="timestamp" class="text-indigo-500 bg-fuchsia-700">
-        <div class="max-h-full max-w-full">
-          发布时间信息
-        </div>
+      <dd id="timestamp" class="flex items-center">
+        <svg class="w-4 h-4 mr-2 text-indigo-500" fill="currentColor" xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24">
+          <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 11h-4V7h2v4h2v2z" />
+        </svg>
+        发布时间信息
       </dd>
     </dl>
   </div>
 </template>
+
 <script type="module">
   import { registerDigestItem } from "{{ mjs_path }}"
   registerDigestItem();
