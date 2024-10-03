@@ -216,4 +216,4 @@ if __name__ == "__main__":
             case _:
                 abort(404)
 
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0")

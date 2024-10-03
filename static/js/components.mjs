@@ -142,17 +142,81 @@ export function registerDigestItem() {
             super();
             this.innerDOM = this.attachShadow({ mode: 'closed' });
             this.innerDOM.append(document.getElementById("digest-tmpl").content.cloneNode(true));
-            this.rendered = false;
             this.attribute_names = ["jump_url", "image_url", "title", "digest", "timestamp", "author", "votes"];
+            this.pending = { "resized": false, "updated": false };
+            this.isIntersecting = false;
+            const observeCallback = entry => {
+                if (!entry.isIntersecting) {
+                    this.isIntersecting = false;
+                    return;
+                }
+                if (this.pending.resized) {
+                    this.alignByRenderText();
+                    this.pending.resized = false;
+                }
+                if (this.pending.updated) {
+                    this.pending.updated = false;
+                }
+                this.isIntersecting = true;
+            };
+            const observer = new IntersectionObserver((entries, _) => {
+                entries.forEach(observeCallback);
+            });
+            observer.observe(this);
+        }
+        maxHeight2px(element, maxHeight) {
+            if (maxHeight.includes("px")) {
+                return parseInt(maxHeight);
+            }
+            else if (maxHeight.includes("%")) {
+                return parseFloat(maxHeight) * this.getMaxHeight(element.parentElement) / 100.0;
+            }
+            else switch (maxHeight) {
+                case "inherit": return this.getMaxHeight(element.parentElement);
+                case "auto":
+                case "none": return window.innerHeight;
+                default: console.log(maxHeight); return -1;
+            }
+        }
+        getMaxHeight(element) {
+            if (!element) {
+                return this.maxHeight2px(this, window.getComputedStyle(this).maxHeight);
+            }
+            return this.maxHeight2px(element, window.getComputedStyle(element).maxHeight);
+        }
+        textRender(element, text) {
+            text = text.replaceAll(/\s+/g, ' ');
+            let maxHeight = this.getMaxHeight(element.parentElement);
+            element.innerHTML = '';
+            for (let i = 1; i <= text.length; i++) {
+                if (element.clientHeight > maxHeight) {
+                    element.innerHTML = text.slice(0, Math.max(1, i - 4)) + '...';
+                    break;
+                }
+                element.innerHTML = text.slice(0, i);
+            }
+            element.parentElement.style.height = element.clientHeight + 'px';
+            return element.clientHeight;
+        }
+        alignByRenderText() {
+            let ele = null;
+            let title = this.getAttribute("title-content") || "暂无标题";
+            ele = this.innerDOM.getElementById("title");
+            this.textRender(ele, title);
+            let digest = this.getAttribute("digest") || "暂无内容";
+            ele = this.innerDOM.getElementById("digest");
+            let height = this.textRender(ele, digest);
+            this.innerDOM.getElementById("image").parentElement.style.height = height + 'px';
         }
         render() {
-            ["title", "digest", "author"].forEach(name => {
+            this.alignByRenderText();
+            ["author"].forEach(name => {
                 let value = this.getAttribute(name);
                 if (value) {
                     this.innerDOM.getElementById(name).innerHTML = value;
                 }
             });
-            let value = this.getAttribute("image_url");
+            let value = this.getAttribute("image-url");
             if (value) {
                 this.innerDOM.getElementById("image").setAttribute("src", value);
             }
@@ -160,21 +224,30 @@ export function registerDigestItem() {
             if (value) {
                 this.innerDOM.getElementById("timestamp").innerHTML = value.toLocalString();
             }
+            let timer = null;
+            window.addEventListener("resize", () => {
+                if (timer) {
+                    clearTimeout(timer);
+                }
+                timer = setTimeout(() => {
+                    if (this.isIntersecting) {
+                        this.alignByRenderText();
+                        this.pending.resized = false;
+                    } else {
+                        this.pending.resized = true;
+                    }
+                }, 500);
+
+            });
         }
         connectedCallback() {
-            if (!this.rendered) {
-                this.render();
-                this.rendered = true;
-            }
-        }
-        disconnectedCallback() {
-
+            this.render();
         }
         static get observedAttributes() {
             return this.attribute_names;
         }
         attributesChangedCallback(name, oldValue, newValue) {
-            this.render();
+            this.pending.updated = true;
         }
         adoptedCallback() {
 
